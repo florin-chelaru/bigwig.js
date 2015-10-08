@@ -18,14 +18,15 @@ goog.require('goog.async.Deferred');
 
 /**
  * @param {string} uri
+ * @param {string} [fwdUri]
  * @constructor
  */
-bigwig.BigwigFile = function(uri) {
+bigwig.BigwigFile = function(uri, fwdUri) {
   /**
    * @type {bigwig.BigwigReader}
    * @private
    */
-  this._reader = new bigwig.BigwigReader(uri);
+  this._reader = new bigwig.BigwigReader(uri, fwdUri);
 
   /**
    * @type {bigwig.models.Header}

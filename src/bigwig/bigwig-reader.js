@@ -31,14 +31,21 @@ goog.require('bigwig.ChrTree');
 
 /**
  * @param {string} uri
+ * @param {string} [fwdUri]
  * @constructor
  */
-bigwig.BigwigReader = function(uri) {
+bigwig.BigwigReader = function(uri, fwdUri) {
   /**
    * @type {string}
    * @private
    */
   this._uri = uri;
+
+  /**
+   * @type {?string}
+   * @private
+   */
+  this._fwdUri = fwdUri || null;
 };
 
 bigwig.BigwigReader.N_RETRIES = 10;
@@ -112,10 +119,11 @@ bigwig.BigwigReader.prototype.get = function(start, end, callback) {
   var retriesLeft = bigwig.BigwigReader.N_RETRIES;
   var s = /** @type {string|number} */ ((start instanceof goog.math.Long) ? start.toString() : start);
   var e = /** @type {string|number} */ ((end instanceof goog.math.Long) ? end.subtract(goog.math.Long.fromInt(1)).toString() : end - 1);
+  var uri = this._fwdUri ? goog.string.format('%s?r=%s-%s&q=%s', this._fwdUri, s, e, this._uri)  : this._uri;
   var retry = function() {
     var req = new XMLHttpRequest();
-    req.open('GET', self._uri, true);
-    req.setRequestHeader('Range', goog.string.format('bytes=%s-%s', s, e));
+    req.open('GET', uri, true);
+    if (!self._fwdUri) { req.setRequestHeader('Range', goog.string.format('bytes=%s-%s', s, e)); }
     req.responseType = 'arraybuffer';
     req.onload = callback;
     req.onreadystatechange = function () {
