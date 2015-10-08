@@ -64,7 +64,7 @@ main.controller('Query', ['$scope', function($scope) {
     }
 
     if (!$scope.bigwig) {
-      $scope.bigwig = new bigwig.BigwigFile('http://localhost/vis/test/partial.php?q=' + $scope.file);
+      $scope.bigwig = new bigwig.BigwigFile('http://localhost/bigwig/test/partial.php?q=' + $scope.file);
       //file = new bigwig.BigwigFile('http://epiviz-dev.cbcb.umd.edu/bigwig/partial.php?q=' + args.file);
     }
     $scope.bigwig.query(args.chr, parseInt(args.start), parseInt(args.end))
