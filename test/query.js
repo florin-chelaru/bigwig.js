@@ -55,25 +55,27 @@ main.controller('Query', ['$scope', function($scope) {
   };
 
   $scope.sendQuery = function() {
-    $scope.success = false;
-    $scope.message = 'Retrieving data...';
-    var args = extractArgs($scope.query);
-    if (!$scope.file || !args.chr || !args.start || !args.end) {
-      $scope.message = 'Please specify valid file, chr, start and end';
+    this.success = false;
+    this.message = 'Retrieving data...';
+    var args = extractArgs(this.query);
+    if (!this.file || !args.chr || !args.start || !args.end) {
+      this.message = 'Please specify valid file, chr, start and end';
       return;
     }
 
-    if (!$scope.bigwig) {
-      $scope.bigwig = new bigwig.BigwigFile($scope.file, 'http://epiviz-dev.cbcb.umd.edu/bigwig/partial.php');
-      //$scope.bigwig = new bigwig.BigwigFile($scope.file, 'http://localhost/bigwig/test/partial.php');
+    if (!this.bigwig) {
+      this.bigwig = new bigwig.BigwigFile(this.file, 'http://epiviz-dev.cbcb.umd.edu/bigwig/partial.php');
+      //this.bigwig = new bigwig.BigwigFile(this.file, 'http://localhost/bigwig/test/partial.php');
     }
-    $scope.bigwig.query(args.chr, parseInt(args.start), parseInt(args.end))
+
+    var self = this;
+    this.bigwig.query(args.chr, parseInt(args.start), parseInt(args.end))
       .then(function(d) {
-        $scope.message = 'Success!';
-        $scope.success = true;
-        $scope.results = d;
-        if (!$scope.$$phase) {
-          $scope.$apply();
+        self.message = 'Success!';
+        self.success = true;
+        self.results = d;
+        if (!self.$$phase) {
+          self.$apply();
         }
       });
   }
