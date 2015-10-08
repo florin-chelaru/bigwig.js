@@ -54,3 +54,5 @@ bigwigFile.query('chr1', 100000, 200000)
 # Demo
 
 Demos are located in `test/index-min.html` (and for the uncompiled sources, in `test/index.html`).
+
+A live demo can be found here: http://www.mit.edu/~florinc/bigwig/
