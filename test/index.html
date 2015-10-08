@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+  <script src="../bower_components/jquery/dist/jquery.js"></script>
+  <script src="../bower_components/angular/angular.js"></script>
+  <script src="../bower_components/d3/d3.js"></script>
+  <script src="../bower_components/google-closure-library/closure/goog/base.js"></script>
+  <script src="../bower_components/zlib.js/bin/zlib.min.js"></script>
+  <script src="../bower_components/utils.js/utils.min.js"></script>
+
+  <!--<script src="../deps.js"></script>-->
+  <script src="../bigwig.min.js"></script>
+  <script src="query.js"></script>
+</head>
+<body ng-app="main" ng-controller="Query">
+  <label>File location:</label>
+  <input type="text" ng-model="file" style="width: 800px;" /><br/>
+  <label>Query:</label>
+  <input type="text" ng-model="query" style="width: 800px;" />
+  <button ng-click="sendQuery()">Go</button>
+  <pre>{{ result }}</pre>
+  <!--<table>
+    <thead><tr>
+      <th>Chr</th>
+      <th>Start</th>
+      <th>End</th>
+      <th>Value</th>
+    </tr></thead>
+    <tr>
+
+    </tr>
+  </table>-->
+</body>
+</html>
