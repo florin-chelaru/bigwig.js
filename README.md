@@ -35,10 +35,12 @@ on the same domain. There is no JavaScript solution for this problem yet; *worka
 * if possible, place `bigwig.min.js` on the same domain as the bigwig file
 
 * create a local PHP server and use the script `test/partial.php` to forward requests from JavaScript to the server storing the bigwig file;
-then, the instantiation of the bigwig file becomes something like:
+then, the instantiation of the bigwig file becomes, for example:
 
 ```javascript
-var bigwigFile = new bigwig.BigwigFile('http://localhost/bigwig/test/partial.php?q=' + 'http://.../file.bigwig');
+var bigwigFile = new bigwig.BigwigFile(
+  'http://egg2.wustl.edu/roadmap/data/byFileType/signal/consolidated/macs2signal/pval/E001-H3K4me1.pval.signal.bigwig',
+  'http://epiviz-dev.cbcb.umd.edu/bigwig/partial.php');
 bigwigFile.query('chr1', 100000, 200000)
   .then(function(records) {
     records.forEach(function(record) {
