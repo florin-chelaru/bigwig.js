@@ -15,6 +15,18 @@ goog.require('bigwig.models.BigwigStruct');
  */
 bigwig.models.ChrTreeNodeItem = function() {
   bigwig.models.BigwigStruct.apply(this, arguments);
+
+  /**
+   * @type {string}
+   * @name bigwig.models.ChrTreeNodeItem#key
+   */
+  this.key;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.ChrTreeNodeItem#childOffset
+   */
+  this.childOffset;
 };
 
 goog.inherits(bigwig.models.ChrTreeNodeItem, bigwig.models.BigwigStruct);
@@ -26,7 +38,7 @@ goog.inherits(bigwig.models.ChrTreeNodeItem, bigwig.models.BigwigStruct);
  * @returns {bigwig.models.ChrTreeNodeItem}
  */
 bigwig.models.ChrTreeNodeItem.fromArrayBuffer = function(data, keySize, littleEndian) {
-  return bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.ChrTreeNodeItem, {key: keySize, childOffset: 8}, data, littleEndian);
+  return /** @type {bigwig.models.ChrTreeNodeItem} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.ChrTreeNodeItem, {key: keySize, childOffset: 8}, data, littleEndian));
 };
 
 /**
@@ -36,5 +48,5 @@ bigwig.models.ChrTreeNodeItem.fromArrayBuffer = function(data, keySize, littleEn
  * @returns {bigwig.models.ChrTreeNodeItem}
  */
 bigwig.models.ChrTreeNodeItem.fromDataView = function(view, keySize, littleEndian) {
-  return bigwig.models.BigwigStruct.fromDataView(bigwig.models.ChrTreeNodeItem, {key: keySize, childOffset: 8}, view, littleEndian);
+  return /** @type {bigwig.models.ChrTreeNodeItem} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.ChrTreeNodeItem, {key: keySize, childOffset: 8}, view, littleEndian));
 };

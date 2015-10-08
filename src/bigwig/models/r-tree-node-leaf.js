@@ -15,6 +15,42 @@ goog.require('bigwig.models.BigwigStruct');
  */
 bigwig.models.RTreeNodeLeaf = function() {
   bigwig.models.BigwigStruct.apply(this, arguments);
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNodeLeaf#startChromIx
+   */
+  this.startChromIx;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNodeLeaf#startBase
+   */
+  this.startBase;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNodeLeaf#endChromIx
+   */
+  this.endChromIx;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNodeLeaf#endBase
+   */
+  this.endBase;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.RTreeNodeLeaf#dataOffset
+   */
+  this.dataOffset;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.RTreeNodeLeaf#dataSize
+   */
+  this.dataSize;
 };
 
 goog.inherits(bigwig.models.RTreeNodeLeaf, bigwig.models.BigwigStruct);
@@ -37,7 +73,7 @@ bigwig.models.RTreeNodeLeaf['Fields'] = {
  * @returns {bigwig.models.RTreeNodeLeaf}
  */
 bigwig.models.RTreeNodeLeaf.fromArrayBuffer = function(data, littleEndian) {
-  return bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.RTreeNodeLeaf, bigwig.models.RTreeNodeLeaf['Fields'] , data, littleEndian);
+  return /** @type {bigwig.models.RTreeNodeLeaf} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.RTreeNodeLeaf, bigwig.models.RTreeNodeLeaf['Fields'] , data, littleEndian));
 };
 
 /**
@@ -46,5 +82,5 @@ bigwig.models.RTreeNodeLeaf.fromArrayBuffer = function(data, littleEndian) {
  * @returns {bigwig.models.RTreeNodeLeaf}
  */
 bigwig.models.RTreeNodeLeaf.fromDataView = function(view, littleEndian) {
-  return bigwig.models.BigwigStruct.fromDataView(bigwig.models.RTreeNodeLeaf, bigwig.models.RTreeNodeLeaf['Fields'] , view, littleEndian);
+  return /** @type {bigwig.models.RTreeNodeLeaf} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.RTreeNodeLeaf, bigwig.models.RTreeNodeLeaf['Fields'] , view, littleEndian));
 };

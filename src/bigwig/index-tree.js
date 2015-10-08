@@ -29,9 +29,7 @@ goog.inherits(bigwig.IndexTree, bigwig.Tree);
  */
 bigwig.IndexTree.prototype.query = function(chr, start, end) {
   var ret = [];
-  this.dfs(
-    /** @param {bigwig.IndexTree.Node} node */
-    function(node) {
+  this.dfs(/** @type {function(bigwig.Tree.Node)} */ (function(node) {
       // don't visit the rest of the subtree if the node range doesn't overlap the query range
       if (node.endChrId < chr || node.startChrId > chr) { return true; }
       if (node.startChrId == chr && node.startBase >= end || node.endChrId == chr && node.endBase <= start) { return true; }
@@ -40,16 +38,16 @@ bigwig.IndexTree.prototype.query = function(chr, start, end) {
       if (node.children && node.children.length) { return false; } // continue
 
       ret.push(node);
-  });
+  }));
 
   return ret;
 };
 
 /**
  * @param {{
- *   isLeaf: boolean, startChrId: ?number, endChrId: ?number, startBase: ?number, endBase: ?number,
- *   children: ?Array.<bigwig.IndexTree.Node>, dataOffset: ?goog.math.Long, dataSize: ?goog.math.Long,
- *   dataRecords: ?Array.<bigwig.DataRecord>
+ *   isLeaf: boolean, startChrId: (number|undefined), endChrId: (number|undefined), startBase: (number|undefined), endBase: (number|undefined),
+ *   children: (Array.<bigwig.IndexTree.Node>|undefined), dataOffset: (goog.math.Long|undefined), dataSize: (goog.math.Long|undefined),
+ *   dataRecords: (Array.<bigwig.DataRecord>|undefined)
  * }} node
  * @constructor
  * @extends {bigwig.Tree.Node}
@@ -63,37 +61,37 @@ bigwig.IndexTree.Node = function(node) {
   this.isLeaf = node.isLeaf;
 
   /**
-   * @type {number}
+   * @type {number|undefined}
    */
   this.startChrId = node.startChrId;
 
   /**
-   * @type {number}
+   * @type {number|undefined}
    */
   this.endChrId = node.endChrId;
 
   /**
-   * @type {number}
+   * @type {number|undefined}
    */
   this.startBase = node.startBase;
 
   /**
-   * @type {number}
+   * @type {number|undefined}
    */
   this.endBase = node.endBase;
 
   /**
-   * @type {goog.math.Long}
+   * @type {goog.math.Long|undefined}
    */
   this.dataOffset = node.dataOffset;
 
   /**
-   * @type {goog.math.Long}
+   * @type {goog.math.Long|undefined}
    */
   this.dataSize = node.dataSize;
 
   /**
-   * @type {Array.<bigwig.DataRecord>}
+   * @type {Array.<bigwig.DataRecord>|undefined}
    */
   this.dataRecords = node.dataRecords;
 };

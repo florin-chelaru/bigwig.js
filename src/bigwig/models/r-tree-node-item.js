@@ -15,6 +15,36 @@ goog.require('bigwig.models.BigwigStruct');
  */
 bigwig.models.RTreeNodeItem = function() {
   bigwig.models.BigwigStruct.apply(this, arguments);
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNodeItem#startChromIx
+   */
+  this.startChromIx;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNodeItem#startBase
+   */
+  this.startBase;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNodeItem#endChromIx
+   */
+  this.endChromIx;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNodeItem#endBase
+   */
+  this.endBase;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.RTreeNodeItem#dataOffset
+   */
+  this.dataOffset;
 };
 
 goog.inherits(bigwig.models.RTreeNodeItem, bigwig.models.BigwigStruct);
@@ -36,7 +66,7 @@ bigwig.models.RTreeNodeItem['Fields'] = {
  * @returns {bigwig.models.RTreeNodeItem}
  */
 bigwig.models.RTreeNodeItem.fromArrayBuffer = function(data, littleEndian) {
-  return bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.RTreeNodeItem, bigwig.models.RTreeNodeItem['Fields'] , data, littleEndian);
+  return /** @type {bigwig.models.RTreeNodeItem} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.RTreeNodeItem, bigwig.models.RTreeNodeItem['Fields'] , data, littleEndian));
 };
 
 /**
@@ -45,5 +75,5 @@ bigwig.models.RTreeNodeItem.fromArrayBuffer = function(data, littleEndian) {
  * @returns {bigwig.models.RTreeNodeItem}
  */
 bigwig.models.RTreeNodeItem.fromDataView = function(view, littleEndian) {
-  return bigwig.models.BigwigStruct.fromDataView(bigwig.models.RTreeNodeItem, bigwig.models.RTreeNodeItem['Fields'] , view, littleEndian);
+  return /** @type {bigwig.models.RTreeNodeItem} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.RTreeNodeItem, bigwig.models.RTreeNodeItem['Fields'] , view, littleEndian));
 };

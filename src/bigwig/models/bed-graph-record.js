@@ -6,19 +6,29 @@
 
 goog.provide('bigwig.models.BedGraphRecord');
 
-goog.require('bigwig.models.BigwigStruct');
 goog.require('bigwig.models.Record');
 
 /**
  * @constructor
- * @extends {bigwig.models.BigwigStruct}
- * @implements {bigwig.models.Record}
+ * @extends {bigwig.models.Record}
  */
 bigwig.models.BedGraphRecord = function() {
-  bigwig.models.BigwigStruct.apply(this, arguments);
+  bigwig.models.Record.apply(this, arguments);
+
+  /**
+   * @type {number}
+   * @name bigwig.models.BedGraphRecord#chromStart
+   */
+  this.chromStart;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.BedGraphRecord#chromEnd
+   */
+  this.chromEnd;
 };
 
-goog.inherits(bigwig.models.BedGraphRecord, bigwig.models.BigwigStruct);
+goog.inherits(bigwig.models.BedGraphRecord, bigwig.models.Record);
 
 /**
  * @type {Object.<string, number>}
@@ -35,7 +45,7 @@ bigwig.models.BedGraphRecord['Fields'] = {
  * @returns {bigwig.models.BedGraphRecord}
  */
 bigwig.models.BedGraphRecord.fromArrayBuffer = function(data, littleEndian) {
-  return bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.BedGraphRecord, bigwig.models.BedGraphRecord['Fields'] , data, littleEndian);
+  return /** @type {bigwig.models.BedGraphRecord} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.BedGraphRecord, bigwig.models.BedGraphRecord['Fields'] , data, littleEndian));
 };
 
 /**
@@ -44,7 +54,7 @@ bigwig.models.BedGraphRecord.fromArrayBuffer = function(data, littleEndian) {
  * @returns {bigwig.models.BedGraphRecord}
  */
 bigwig.models.BedGraphRecord.fromDataView = function(view, littleEndian) {
-  return bigwig.models.BigwigStruct.fromDataView(bigwig.models.BedGraphRecord, bigwig.models.BedGraphRecord['Fields'] , view, littleEndian);
+  return /** @type {bigwig.models.BedGraphRecord} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.BedGraphRecord, bigwig.models.BedGraphRecord['Fields'] , view, littleEndian));
 };
 
 

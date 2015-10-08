@@ -6,16 +6,20 @@
 
 goog.provide('bigwig.models.Record');
 
-/**
- * @interface
- */
-bigwig.models.Record = function() {};
+goog.require('bigwig.models.BigwigStruct');
 
-Object.defineProperties(bigwig.models.Record.prototype, {
+/**
+ * @constructor
+ * @extends {bigwig.models.BigwigStruct}
+ */
+bigwig.models.Record = function() {
+  bigwig.models.BigwigStruct.apply(this, arguments);
+
   /**
    * @type {number}
-   * @instance
-   * @memberof bigwig.models.Record
+   * @name bigwig.models.Record#value
    */
-  value: { get: function() { return null; } }
-});
+  this.value;
+};
+
+goog.inherits(bigwig.models.Record, bigwig.models.BigwigStruct);

@@ -8,30 +8,33 @@ goog.require('bigwig.DataRecord');
 
 goog.exportSymbol('bigwig.DataRecord', bigwig.DataRecord);
 
+/*goog.exportPropertyGetter = function(obj, propertyName, getter) {
+  if (Object.getOwnPropertyDescriptor(obj, propertyName) == undefined) {
+    Object.defineProperty(obj, propertyName, {get: getter});
+  }
+};
+
+goog.exportPropertyGetter(bigwig.DataRecord.prototype, 'chrName', function() { return bigwig.DataRecord.prototype.chrName.call(this); });
+
+if (Object.getOwnPropertyDescriptor(bigwig.DataRecord.prototype, 'chrName') == undefined) {
+  Object.defineProperty(bigwig.DataRecord.prototype, 'chrName', {
+    get: function() { return this.chrName; }
+  });
+}*/
+
+/*Object.defineProperties(bigwig.DataRecord.prototype, {
+  'chrName': { get: function() { return this.chrName; },
+  'chr': Object.getOwnPropertyDescriptor(bigwig.DataRecord.prototype, 'chr'),
+  'start': Object.getOwnPropertyDescriptor(bigwig.DataRecord.prototype, 'start'),
+  'end': Object.getOwnPropertyDescriptor(bigwig.DataRecord.prototype, 'end'),
+  'value': Object.getOwnPropertyDescriptor(bigwig.DataRecord.prototype, 'value')
+});*/
+
 /*
-Object.defineProperties(bigwig.DataRecord.prototype, {
-  chrName: { get: function() { return this._chrTree ? this._chrTree.getLeaf(this.chr).key : this.chr; } },
-
-  chr: { get: function() { return this._sectionHeader.chrId; } },
-
-  start: { get: function() {
-    if (this._record.chromStart != undefined) { return this._record.chromStart; }
-    return this._node.startBase + this._sectionHeader.itemStep * this._index;
-  }},
-
-  end: { get: function() {
-    if (this._record.chromEnd != undefined) { return this._record.chromEnd; }
-    return this.start + this._sectionHeader.itemSpan;
-  }},
-
-  value: { get: function() { return this._record.value; } }
-});
-
-bigwig.DataRecord.prototype.toString = function() {
-  return JSON.stringify(this.toJSON());
-};
-
-bigwig.DataRecord.prototype.toJSON = function() {
-  return {chr: this.chrName, start: this.start, end: this.end, value: this.value};
-};
+goog.exportProperty(bigwig.DataRecord.prototype, 'chrName', Object.getOwnPropertyDescriptor(bigwig.DataRecord.prototype, 'chrName'));
+goog.exportProperty(bigwig.DataRecord.prototype, 'chr', Object.getOwnPropertyDescriptor(bigwig.DataRecord.prototype, 'chr'));
+goog.exportProperty(bigwig.DataRecord.prototype, 'start', Object.getOwnPropertyDescriptor(bigwig.DataRecord.prototype, 'start'));
+goog.exportProperty(bigwig.DataRecord.prototype, 'end', Object.getOwnPropertyDescriptor(bigwig.DataRecord.prototype, 'end'));
+goog.exportProperty(bigwig.DataRecord.prototype, 'value', Object.getOwnPropertyDescriptor(bigwig.DataRecord.prototype, 'value'));
 */
+

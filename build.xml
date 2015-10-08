@@ -5,16 +5,15 @@
   <property name="level" value="ADVANCED_OPTIMIZATIONS"/>
   <property name="src" value="${rootpath}/src"/>
   <property name="compiler" value="${rootpath}/bower_components/closure-compiler/lib/vendor/compiler.jar"/>
-  <property name="closure_primitives"
-            value="${rootpath}/bower_components/google-closure-library/closure/goog/base.js"/>
-  <property name="closure_deps"
-            value="${rootpath}/bower_components/google-closure-library/closure/goog/deps.js"/>
   <property name="closure_src"
             value="${rootpath}/bower_components/google-closure-library/closure/goog"/>
+  <property name="closure_tp_src"
+            value="${rootpath}/bower_components/google-closure-library/third_party/closure/goog"/>
   <property name="depswriter"
             value="${rootpath}/bower_components/google-closure-library/closure/bin/build/depswriter.py"/>
-  <property name="depend"
-            value="deps.js" />
+  <property name="closurebuilder"
+            value="${rootpath}/bower_components/google-closure-library/closure/bin/build/closurebuilder.py"/>
+  <property name="depend" value="deps.js" />
   <property name="export" value="${rootpath}/export"/>
   <property name="externs" value="${rootpath}/externs/externs.js"/>
 
@@ -27,22 +26,30 @@
       <arg line="--output_file=${depend}"/>
     </exec>
 
-    <pathconvert property="closure_srcfiles" pathsep=" ">
-      <map from="${rootdir}" to="&#45;&#45;js ."/>
-      <fileset dir="${closure_src}" includes="**/*.js"/>
-    </pathconvert>
-
-    <echo message="${closure_srcfiles}" />
-
-    <pathconvert property="srcfiles" pathsep=" ">
-      <map from="${rootdir}" to="&#45;&#45;js ."/>
-      <fileset dir="${src}" includes="**/*.js"/>
-    </pathconvert>
-
     <pathconvert property="exportfiles" pathsep=" ">
       <map from="${rootdir}" to="&#45;&#45;js ."/>
       <fileset dir="${export}" includes="**/*.js"/>
     </pathconvert>
+
+    <exec executable="python" failonerror="true">
+      <arg line="${closurebuilder}"/>
+      <arg line="--root=&quot;${closure_src}&quot;"/>
+      <arg line="--root=&quot;${closure_tp_src}&quot;"/>
+      <arg line="--root=&quot;${src}/bigwig&quot;"/>
+      <arg line="--namespace=&quot;bigwig&quot;"/>
+      <redirector outputproperty="srcfiles" errorproperty="depserr">
+        <outputfilterchain>
+          <replacestring from="\" to="/"/>
+          <prefixlines prefix=" --js ./" />
+          <striplinebreaks />
+          <trim />
+        </outputfilterchain>
+      </redirector>
+    </exec>
+
+    <!--<echo message="${exportfiles}"/>
+    <echo message="${srcfiles}"/>-->
+
   </target>
 
   <target name="compile" depends="deps" description="">
@@ -62,11 +69,8 @@
       <arg line="&#45;&#45;js_output_file=${outfile}"/>
       <arg line="&#45;&#45;create_source_map=${outfile}.map"/>
       <arg line="&#45;&#45;manage_closure_dependencies"/>
-      <arg line="&#45;&#45;js=${closure_primitives}"/>
-      <arg line="&#45;&#45;js=${closure_deps}"/>
       <arg line="&#45;&#45;externs=${externs}"/>
       <arg line="${srcfiles}"/>
-      <arg line="${closure_srcfiles}"/>
       <arg line="${exportfiles}"/>
     </java>
   </target>

@@ -1,6 +1,6 @@
 {
   "name": "bigwig.js",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "authors": [
     "Florin Chelaru <florinc@mit.edu>"
   ],
@@ -21,10 +21,10 @@
   ],
   "dependencies": {
     "utils.js": "git://github.com/florin-chelaru/utils.js.git",
-    "google-closure-library": "git://github.com/google/closure-library.git#56712dfced32778fc8435a4bea6a2e422e5f03c1",
     "zlib.js": "0.2.0"
   },
   "devDependencies": {
+    "google-closure-library": "git://github.com/google/closure-library.git#56712dfced32778fc8435a4bea6a2e422e5f03c1",
     "qunit": "1.19.0",
     "closure-compiler": "0.2.7",
     "angular": "1.4.4",

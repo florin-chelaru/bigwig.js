@@ -14,6 +14,24 @@ goog.require('bigwig.models.BigwigStruct');
  */
 bigwig.models.RTreeNode = function() {
   bigwig.models.BigwigStruct.apply(this, arguments);
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNode#isLeaf
+   */
+  this.isLeaf;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNode#reserved
+   */
+  this.reserved;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNode#count
+   */
+  this.count;
 };
 
 goog.inherits(bigwig.models.RTreeNode, bigwig.models.BigwigStruct);
@@ -23,7 +41,7 @@ goog.inherits(bigwig.models.RTreeNode, bigwig.models.BigwigStruct);
  */
 bigwig.models.RTreeNode['Fields'] = {
   isLeaf: 1,
-  reseved: 1,
+  reserved: 1,
   count: 2
 };
 
@@ -33,7 +51,7 @@ bigwig.models.RTreeNode['Fields'] = {
  * @returns {bigwig.models.RTreeNode}
  */
 bigwig.models.RTreeNode.fromArrayBuffer = function(data, littleEndian) {
-  return bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.RTreeNode, bigwig.models.RTreeNode['Fields'] , data, littleEndian);
+  return /** @type {bigwig.models.RTreeNode} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.RTreeNode, bigwig.models.RTreeNode['Fields'] , data, littleEndian));
 };
 
 /**
@@ -42,6 +60,6 @@ bigwig.models.RTreeNode.fromArrayBuffer = function(data, littleEndian) {
  * @returns {bigwig.models.RTreeNode}
  */
 bigwig.models.RTreeNode.fromDataView = function(view, littleEndian) {
-  return bigwig.models.BigwigStruct.fromDataView(bigwig.models.RTreeNode, bigwig.models.RTreeNode['Fields'] , view, littleEndian);
+  return /** @type {bigwig.models.RTreeNode} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.RTreeNode, bigwig.models.RTreeNode['Fields'] , view, littleEndian));
 };
 

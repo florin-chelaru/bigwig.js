@@ -15,4 +15,8 @@ var u = {
   "each": function () {}
 };
 
-var Zlib = { Inflate: function() {} };
+var Zlib = {
+  Inflate: function() {}
+};
+
+Zlib.Inflate.decompress = function() {};

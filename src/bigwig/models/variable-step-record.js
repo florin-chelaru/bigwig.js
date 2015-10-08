@@ -6,19 +6,23 @@
 
 goog.provide('bigwig.models.VariableStepRecord');
 
-goog.require('bigwig.models.BigwigStruct');
 goog.require('bigwig.models.Record');
 
 /**
  * @constructor
- * @extends {bigwig.models.BigwigStruct}
- * @implements {bigwig.models.Record}
+ * @extends {bigwig.models.Record}
  */
 bigwig.models.VariableStepRecord = function() {
-  bigwig.models.BigwigStruct.apply(this, arguments);
+  bigwig.models.Record.apply(this, arguments);
+
+  /**
+   * @type {number}
+   * @name bigwig.models.VariableStepRecord#chromStart
+   */
+  this.chromStart;
 };
 
-goog.inherits(bigwig.models.VariableStepRecord, bigwig.models.BigwigStruct);
+goog.inherits(bigwig.models.VariableStepRecord, bigwig.models.Record);
 
 /**
  * @type {Object.<string, number>}

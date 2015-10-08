@@ -15,6 +15,54 @@ goog.require('bigwig.models.BigwigStruct');
  */
 bigwig.models.SectionHeader = function() {
   bigwig.models.BigwigStruct.apply(this, arguments);
+
+  /**
+   * @type {number}
+   * @name bigwig.models.SectionHeader#chrId
+   */
+  this.chrId;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.SectionHeader#start
+   */
+  this.start;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.SectionHeader#end
+   */
+  this.end;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.SectionHeader#itemStep
+   */
+  this.itemStep;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.SectionHeader#itemSpan
+   */
+  this.itemSpan;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.SectionHeader#type
+   */
+  this.type;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.SectionHeader#reserved
+   */
+  this.reserved;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.SectionHeader#itemCount
+   */
+  this.itemCount;
 };
 
 goog.inherits(bigwig.models.SectionHeader, bigwig.models.BigwigStruct);
@@ -29,7 +77,7 @@ bigwig.models.SectionHeader['Fields'] = {
   itemStep: 4,
   itemSpan: 4,
   type: 1,
-  reseved: 1,
+  reserved: 1,
   itemCount: 2
 };
 

@@ -32,7 +32,7 @@ bigwig.ChrTree = function(root) {
 goog.inherits(bigwig.ChrTree, bigwig.Tree);
 
 /**
- * @param {{key: ?string, chrId: ?number, chrSize: ?number, children: ?Array.<bigwig.ChrTree.Node>}} node
+ * @param {{key: (string|undefined), chrId: (number|undefined), chrSize: (number|undefined), children: (Array.<bigwig.ChrTree.Node>|undefined)}} node
  * @constructor
  * @extends {bigwig.Tree.Node}
  */
@@ -40,17 +40,17 @@ bigwig.ChrTree.Node = function(node) {
   bigwig.Tree.Node.apply(this, arguments);
 
   /**
-   * @type {string}
+   * @type {string|undefined}
    */
   this.key = node.key;
 
   /**
-   * @type {number}
+   * @type {number|undefined}
    */
   this.chrId = node.chrId;
 
   /**
-   * @type {number}
+   * @type {number|undefined}
    */
   this.chrSize = node.chrSize;
 };

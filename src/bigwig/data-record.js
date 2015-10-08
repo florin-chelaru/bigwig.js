@@ -47,50 +47,56 @@ bigwig.DataRecord = function(node, sectionHeader, rawRecord, index, chrTree) {
    * @type {bigwig.ChrTree}
    * @private
    */
-  this._chrTree = chrTree;
+  this._chrTree = chrTree || null;
 };
 
+/**
+ * @type {number}
+ * @name {bigwig.DataRecord#chrName}
+ */
+bigwig.DataRecord.prototype.chrName;
+
+/**
+ * @type {number}
+ * @name {bigwig.DataRecord#chr}
+ */
+bigwig.DataRecord.prototype.chr;
+
+/**
+ * @type {number}
+ * @name {bigwig.DataRecord#start}
+ */
+bigwig.DataRecord.prototype.start;
+
+/**
+ * @type {number}
+ * @name {bigwig.DataRecord#end}
+ */
+bigwig.DataRecord.prototype.end;
+
+/**
+ * @type {number}
+ * @name {bigwig.DataRecord#value}
+ */
+bigwig.DataRecord.prototype.value;
+
 Object.defineProperties(bigwig.DataRecord.prototype, {
-  /**
-   * @property
-   * @type {string}
-   * @name bigwig.DataRecord#chrName
-   */
-  'chrName': /** @type {string} */ ({ get: /** @type {function (this:bigwig.DataRecord)} */ (function() { return this._chrTree ? this._chrTree.getLeaf(this.chr).key : this.chr; }) }),
 
-  /**
-   * @property
-   * @type {number}
-   * @name bigwig.DataRecord#chr
-   */
-  'chr': /** @type {number} */ ({ get: /** @type {function (this:bigwig.DataRecord)} */ (function() { return this._sectionHeader.chrId; }) }),
+  'chrName': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { return this._chrTree ? this._chrTree.getLeaf(this['chr']).key : this['chr']; }) },
 
-  /**
-   * @property
-   * @type {number}
-   * @name bigwig.DataRecord#start
-   */
-  'start': /** @type {number} */ ({ get: /** @type {function (this:bigwig.DataRecord)} */ (function() {
+  'chr': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { return this._sectionHeader.chrId; }) },
+
+  'start': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() {
     if (this._record.chromStart != undefined) { return this._record.chromStart; }
     return this._node.startBase + this._sectionHeader.itemStep * this._index;
-  })}),
+  })},
 
-  /**
-   * @property
-   * @type {number}
-   * @name bigwig.DataRecord#end
-   */
-  'end': /** @type {number} */ ({ get: /** @type {function (this:bigwig.DataRecord)} */ (function() {
+  'end': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() {
     if (this._record.chromEnd != undefined) { return this._record.chromEnd; }
-    return this.start + this._sectionHeader.itemSpan;
-  })}),
+    return this['start'] + this._sectionHeader.itemSpan;
+  })},
 
-  /**
-   * @property
-   * @type {number}
-   * @name bigwig.DataRecord#start
-   */
-  'value': /** @type {number} */ ({ get: /** @type {function (this:bigwig.DataRecord)} */ (function() { return this._record.value; }) })
+  'value': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { return this._record.value; }) }
 });
 
 bigwig.DataRecord.prototype.toString = function() {
@@ -98,5 +104,5 @@ bigwig.DataRecord.prototype.toString = function() {
 };
 
 bigwig.DataRecord.prototype.toJSON = function() {
-  return {chr: this.chrName, start: this.start, end: this.end, value: this.value};
+  return {'chr': this['chrName'], 'start': this['start'], 'end': this['end'], 'value': this['value']};
 };

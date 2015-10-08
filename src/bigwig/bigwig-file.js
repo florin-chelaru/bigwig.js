@@ -8,6 +8,7 @@ goog.provide('bigwig.BigwigFile');
 
 goog.require('bigwig.BigwigReader');
 goog.require('bigwig.models.Header');
+goog.require('bigwig.models.Record');
 
 goog.require('bigwig.ChrTree');
 goog.require('bigwig.IndexTree');
@@ -77,7 +78,7 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end) {
    * @type {bigwig.ChrTree.Node}
    */
   var chrNode = this._chrTree.getLeaf(chr);
-  var chrId = chrNode.chrId;
+  var chrId = /** @type {number} */ (chrNode.chrId);
 
   if (!this._indexTree) {
     this._reader.readRootedIndexBlock(this._header, chrId, start, end)
@@ -96,7 +97,7 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end) {
   nodes.forEach(function(node) {
     if (!node.isLeaf) {
       ++remaining;
-      self._reader.readIndexBlock(self._header, chrId, start, end, node.dataOffset)
+      self._reader.readIndexBlock(self._header, chrId, start, end, /** @type {goog.math.Long} */ (node.dataOffset))
         .then(function(children) {
           node.children = children;
           --remaining;
@@ -135,7 +136,7 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end) {
   if (remaining) { return deferred; }
 
   var ret = nodes
-    .map(function(node) { return node.dataRecords.filter(function(r) { return r.chr == chrId && r.start < end && r.end > start; })})
+    .map(function(node) { return node.dataRecords.filter(/** @param {bigwig.DataRecord} r */ function(r) { return r['chr'] == chrId && r['start'] < end && r['end'] > start; })})
     .reduce(function(a1, a2) { return a1.concat(a2); });
 
   deferred.callback(ret);

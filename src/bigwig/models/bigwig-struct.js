@@ -73,7 +73,7 @@ bigwig.models.BigwigStruct.fromDataView = function(bigwigType, fields, view, lit
         val = view.getUint16(offset, !bigEndian);
         break;
       case 1:
-        val = view.getUint8(offset, !bigEndian);
+        val = view.getUint8(offset);
         break;
       case -8:
         val = view.getFloat64(offset, !bigEndian);

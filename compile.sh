@@ -1,5 +1,13 @@
+# DEPRECATED! Use `ant compile` instead!
+
 ./bower_components/google-closure-library/closure/bin/build/depswriter.py --root_with_prefix="src/bigwig ../../../../src/bigwig" > ./deps.js
 
+
+./bower_components/google-closure-library/closure/bin/build/closurebuilder.py \
+  --root=bower_components/google-closure-library/closure/goog/ \
+  --root=bower_components/google-closure-library/third_party/closure/goog/ \
+  --root=src/bigwig/ \
+  --namespace="bigwig"
 
 ./bower_components/google-closure-library/closure/bin/build/closurebuilder.py \
   --compiler_flags="--externs=externs/externs.js" \

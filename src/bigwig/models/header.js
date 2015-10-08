@@ -15,24 +15,97 @@ goog.require('bigwig.models.BigwigStruct');
  */
 bigwig.models.Header = function() {
   bigwig.models.BigwigStruct.apply(this, arguments);
+
+  /**
+   * @type {number}
+   * @name bigwig.models.Header#magic
+   */
+  this.magic;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.Header#version
+   */
+  this.version;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.Header#zoomLevels
+   */
+  this.zoomLevels;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.Header#chromosomeTreeOffset
+   */
+  this.chromosomeTreeOffset;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.Header#fullDataOffset
+   */
+  this.fullDataOffset;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.Header#fullIndexOffset
+   */
+  this.fullIndexOffset;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.Header#fieldCount
+   */
+  this.fieldCount;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.Header#definedFieldCount
+   */
+  this.definedFieldCount;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.Header#autoSqlOffset
+   */
+  this.autoSqlOffset;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.Header#totalSummaryOffset
+   */
+  this.totalSummaryOffset;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.Header#uncompressedBufSize
+   */
+  this.uncompressedBufSize;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.Header#reserved
+   */
+  this.reserved;
 };
 
 goog.inherits(bigwig.models.Header, bigwig.models.BigwigStruct);
 
-Object.defineProperties(bigwig.models.Header.prototype, {
-  /**
-   * @property
-   * @type {boolean}
-   * @name bigwig.models.Header#bigEndian
-   */
-  'bigEndian': /** @type {boolean} */ ({ get: /** @type {function (this:bigwig.DataRecord)} */ (function() { return this.magic == 0x888FFC26; }) }),
+/**
+ * @type {boolean}
+ * @name bigwig.models.Header#bigEndian
+ */
+bigwig.models.Header.prototype.bigEndian;
 
-  /**
-   * @property
-   * @type {boolean}
-   * @name bigwig.models.Header#bigEndian
-   */
-  'littleEndian': /** @type {boolean} */ ({ get: /** @type {function (this:bigwig.DataRecord)} */ (function() { return !this.bigEndian; }) })
+/**
+ * @type {boolean}
+ * @name bigwig.models.Header#littleEndian
+ */
+bigwig.models.Header.prototype.littleEndian;
+
+Object.defineProperties(bigwig.models.Header.prototype, {
+  bigEndian: { get: /** @type {function (this:bigwig.models.Header)} */ (function() { return this.magic == 0x888FFC26; }) },
+  littleEndian: { get: /** @type {function (this:bigwig.models.Header)} */ (function() { return !this.bigEndian; }) }
 });
 
 /**
@@ -63,7 +136,7 @@ bigwig.models.Header.fromArrayBuffer = function(data) {
   var magic = view.getUint32(0);
   var bigEndian = magic == 0x888FFC26;
 
-  var header = bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.Header, bigwig.models.Header['Fields'] , data, !bigEndian);
+  var header = /** @type {bigwig.models.Header} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.Header, bigwig.models.Header['Fields'] , data, !bigEndian));
   header.magic = magic;
 
   return header;

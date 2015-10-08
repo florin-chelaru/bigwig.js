@@ -6,19 +6,17 @@
 
 goog.provide('bigwig.models.FixedStepRecord');
 
-goog.require('bigwig.models.BigwigStruct');
 goog.require('bigwig.models.Record');
 
 /**
  * @constructor
- * @extends {bigwig.models.BigwigStruct}
- * @implements {bigwig.models.Record}
+ * @extends {bigwig.models.Record}
  */
 bigwig.models.FixedStepRecord = function() {
-  bigwig.models.BigwigStruct.apply(this, arguments);
+  bigwig.models.Record.apply(this, arguments);
 };
 
-goog.inherits(bigwig.models.FixedStepRecord, bigwig.models.BigwigStruct);
+goog.inherits(bigwig.models.FixedStepRecord, bigwig.models.Record);
 
 /**
  * @type {Object.<string, number>}
@@ -33,7 +31,7 @@ bigwig.models.FixedStepRecord['Fields'] = {
  * @returns {bigwig.models.FixedStepRecord}
  */
 bigwig.models.FixedStepRecord.fromArrayBuffer = function(data, littleEndian) {
-  return bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.FixedStepRecord, bigwig.models.FixedStepRecord['Fields'] , data, littleEndian);
+  return /** @type {bigwig.models.FixedStepRecord} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.FixedStepRecord, bigwig.models.FixedStepRecord['Fields'] , data, littleEndian));
 };
 
 /**
@@ -42,7 +40,7 @@ bigwig.models.FixedStepRecord.fromArrayBuffer = function(data, littleEndian) {
  * @returns {bigwig.models.FixedStepRecord}
  */
 bigwig.models.FixedStepRecord.fromDataView = function(view, littleEndian) {
-  return bigwig.models.BigwigStruct.fromDataView(bigwig.models.FixedStepRecord, bigwig.models.FixedStepRecord['Fields'] , view, littleEndian);
+  return /** @type {bigwig.models.FixedStepRecord} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.FixedStepRecord, bigwig.models.FixedStepRecord['Fields'] , view, littleEndian));
 };
 
 

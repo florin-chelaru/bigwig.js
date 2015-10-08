@@ -94,46 +94,40 @@ bigwig.BigwigReader.R_TREE_NODE_LEAF_SIZE = bigwig.models.BigwigStruct.sizeOf(bi
 bigwig.BigwigReader.SECTION_HEADER_SIZE = bigwig.models.BigwigStruct.sizeOf(bigwig.models.SectionHeader);
 
 /**
- * @type {Object.<number, function(new: bigwig.models.Record)>}
+ * @type {Object.<number, Array>}
  */
 bigwig.BigwigReader.RECORD_TYPES = {
-  1: bigwig.models.BedGraphRecord,
-  2: bigwig.models.VariableStepRecord,
-  3: bigwig.models.FixedStepRecord
+  1: [bigwig.models.BedGraphRecord, bigwig.models.BedGraphRecord.fromDataView, bigwig.models.BedGraphRecord.fromArrayBuffer],
+  2: [bigwig.models.VariableStepRecord, bigwig.models.VariableStepRecord.fromDataView, bigwig.models.VariableStepRecord.fromArrayBuffer],
+  3: [bigwig.models.FixedStepRecord, bigwig.models.FixedStepRecord.fromDataView, bigwig.models.FixedStepRecord.fromArrayBuffer]
 };
 
 /**
  * @param {number|goog.math.Long} start
  * @param {number|goog.math.Long} end
- * @param {function(XMLHttpRequestProgressEvent)} callback
+ * @param {function(*)} callback
  */
 bigwig.BigwigReader.prototype.get = function(start, end, callback) {
   var self = this;
   var retriesLeft = bigwig.BigwigReader.N_RETRIES;
+  var s = /** @type {string|number} */ ((start instanceof goog.math.Long) ? start.toString() : start);
+  var e = /** @type {string|number} */ ((end instanceof goog.math.Long) ? end.subtract(goog.math.Long.fromInt(1)).toString() : end - 1);
   var retry = function() {
-    if (start instanceof goog.math.Long) {
-      start = start.toString();
-    }
-    if (end instanceof goog.math.Long) {
-      end = end.toString();
-    }
-
     var req = new XMLHttpRequest();
     req.open('GET', self._uri, true);
-    req.setRequestHeader('Range', goog.string.format('bytes=%s-%s', start, end - 1));
+    req.setRequestHeader('Range', goog.string.format('bytes=%s-%s', s, e));
     req.responseType = 'arraybuffer';
     req.onload = callback;
-    req.onreadystatechange = function (e) {
+    req.onreadystatechange = function () {
       if (req.readyState === 4) {
         if (req.status === 200 || req.status == 206) {
-          //console.log(req.statusText);
         } else {
           --retriesLeft;
           if (retriesLeft) {
-            console.log('Failed: Range ' + goog.string.format('bytes=%s-%s', start, end - 1) + '; retrying...');
+            console.log('Failed: Range ' + goog.string.format('bytes=%s-%s', s, e) + '; retrying...');
             retry();
           } else {
-            console.error('Failed: Range ' + goog.string.format('bytes=%s-%s', start, end - 1));
+            console.error('Failed: Range ' + goog.string.format('bytes=%s-%s', s, e));
           }
         }
       }
@@ -262,7 +256,7 @@ bigwig.BigwigReader.prototype.readChrTreeNodeItems = function(header, treeHeader
 
 /**
  * @param {bigwig.models.Header} header
- * @returns {goog.async.Deferred.<bigwig.models.ChrTree>}
+ * @returns {goog.async.Deferred.<bigwig.ChrTree>}
  */
 bigwig.BigwigReader.prototype.readChrTree = function(header) {
   var self = this;
@@ -356,11 +350,10 @@ bigwig.BigwigReader.prototype.readRTreeNode = function(header, offset) {
 /**
  * TODO: Expand once we find a bigwig file with more than one level in the tree
  * @param {bigwig.models.Header} header
- * @param {bigwig.models.RTreeHeader} treeHeader
  * @param {goog.math.Long} offset
- * @returns {goog.async.Deferred.<{node: bigwig.models.ChrTreeNode, items: Array.<bigwig.models.ChrTreeNodeItem|bigwig.models.ChrTreeNodeLeaf>}>}
+ * @returns {goog.async.Deferred.<{node: bigwig.models.RTreeNode, items: Array.<bigwig.models.RTreeNodeItem|bigwig.models.RTreeNodeLeaf>}>}
  */
-bigwig.BigwigReader.prototype.readRTreeNodeItems = function(header, treeHeader, offset) {
+bigwig.BigwigReader.prototype.readRTreeNodeItems = function(header, offset) {
   var self = this;
   var deferred = new goog.async.Deferred();
 
@@ -411,7 +404,7 @@ bigwig.BigwigReader.prototype.readRTree = function(header) {
       for (var i = 0; i < rTreeHeader.itemCount; ++i) {
         seq.push(new goog.async.Deferred());
         seq[i].then(function(j) {
-          //self.readRTreeNodeItems(header, rTreeHeader, offset)
+          //self.readRTreeNodeItems(header, offset)
           self.readRTreeNode(header, offset)
             .then(function(d) {
               //tree.branches.push(d);
@@ -449,7 +442,7 @@ bigwig.BigwigReader.prototype.readRTreeBranch = function(header) {
       /** @type {goog.math.Long} */
       var offset = header.fullIndexOffset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_HEADER_SIZE));
       var iterate = function() {
-        self.readRTreeNodeItems(header, undefined, offset)
+        self.readRTreeNodeItems(header, offset)
           .then(function(d) {
             tree.nodes.push(d);
             if (!d.node.isLeaf) {
@@ -484,10 +477,11 @@ bigwig.BigwigReader.prototype.readData = function(header, leaf) {
     var sectionHeader = bigwig.models.SectionHeader.fromDataView(new DataView(plain.buffer, 0, bigwig.BigwigReader.SECTION_HEADER_SIZE), header.littleEndian);
     var records = [];
 
-    var recordType = bigwig.BigwigReader.RECORD_TYPES[sectionHeader.type];
+    var recordType = bigwig.BigwigReader.RECORD_TYPES[sectionHeader.type][0];
+    var fromDataView = bigwig.BigwigReader.RECORD_TYPES[sectionHeader.type][1];
     var recordSize = bigwig.models.BigwigStruct.sizeOf(recordType);
     for (var i = 0; i < sectionHeader.itemCount; ++i) {
-      records[i] = recordType.fromDataView(new DataView(plain.buffer, bigwig.BigwigReader.SECTION_HEADER_SIZE + recordSize * i, recordSize), header.littleEndian);
+      records[i] = fromDataView(new DataView(plain.buffer, bigwig.BigwigReader.SECTION_HEADER_SIZE + recordSize * i, recordSize), header.littleEndian);
     }
 
     deferred.callback({sectionHeader: sectionHeader, records: records});
@@ -508,7 +502,7 @@ bigwig.BigwigReader.prototype.readIndexBlock = function(header, chr, start, end,
   var self = this;
   var deferred = new goog.async.Deferred();
 
-  self.readRTreeNodeItems(header, undefined, offset)
+  self.readRTreeNodeItems(header, offset)
     .then(
     /**
      * @param {{node: bigwig.models.RTreeNode, items: Array.<bigwig.models.RTreeNodeItem|bigwig.models.RTreeNodeLeaf>}} d
