@@ -19,6 +19,7 @@ main.controller('Query', ['$scope', function($scope) {
   $scope.message = 'Result will be shown here.';
   $scope.results = [];
   $scope.success = false;
+  $scope.initialized = false;
 
   $scope.bigwig = null;
 
@@ -69,7 +70,18 @@ main.controller('Query', ['$scope', function($scope) {
     }
 
     var self = this;
-    this.bigwig.query(args.chr, parseInt(args.start), parseInt(args.end))
+    this.bigwig.initialized
+      .then(function(file) {
+        self.minVal = file.summary.min;
+        self.maxVal = file.summary.max;
+        self.initialized = true;
+        self.message = 'Initialized! Getting data...';
+        if (!self.$$phase) {
+          self.$apply();
+        }
+        var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end));
+        return ret;
+      })
       .then(function(d) {
         self.message = 'Success!';
         self.success = true;
@@ -78,5 +90,6 @@ main.controller('Query', ['$scope', function($scope) {
           self.$apply();
         }
       });
+
   }
 }]);

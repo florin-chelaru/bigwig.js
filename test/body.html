@@ -6,6 +6,13 @@
 <br />
 <span>{{ message }}</span>
 <br />
+
+<div ng-show="initialized">
+  <label>Minval:</label><span>{{ minVal }}</span><br/>
+  <label>Maxval:</label><span>{{ maxVal }}</span>
+</div>
+<br/>
+
 <table ng-show="success">
   <thead><tr>
     <th>Chr</th>

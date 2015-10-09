@@ -181,7 +181,7 @@ bigwig.BigwigReader.prototype.readZoomHeader = function(header, index) {
 
 /**
  * @param {bigwig.models.Header} header
- * @returns {goog.async.Deferred.<bigwig.models.ZoomHeader>}
+ * @returns {goog.async.Deferred.<bigwig.models.TotalSummary>}
  */
 bigwig.BigwigReader.prototype.readTotalSummary = function(header) {
   var deferred = new goog.async.Deferred();

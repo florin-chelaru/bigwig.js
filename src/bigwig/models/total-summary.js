@@ -14,6 +14,36 @@ goog.require('bigwig.models.BigwigStruct');
  */
 bigwig.models.TotalSummary = function() {
   bigwig.models.BigwigStruct.apply(this, arguments);
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.TotalSummary#basesCovered
+   */
+  this.basesCovered;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.TotalSummary#minVal
+   */
+  this.minVal;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.TotalSummary#maxVal
+   */
+  this.maxVal;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.TotalSummary#sumData
+   */
+  this.sumData;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.TotalSummary#sumSquares
+   */
+  this.sumSquares;
 };
 
 goog.inherits(bigwig.models.TotalSummary, bigwig.models.BigwigStruct);

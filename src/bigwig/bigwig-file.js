@@ -35,6 +35,12 @@ bigwig.BigwigFile = function(uri, fwdUri) {
   this._header = null;
 
   /**
+   * @type {bigwig.models.TotalSummary}
+   * @private
+   */
+  this._summary = null;
+
+  /**
    * @type {bigwig.ChrTree}
    * @private
    */
@@ -45,6 +51,18 @@ bigwig.BigwigFile = function(uri, fwdUri) {
    * @private
    */
   this._indexTree = null;
+
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this._initializationStarted = false;
+
+  /**
+   * @type {goog.async.Deferred.<bigwig.BigwigFile>}
+   * @private
+   */
+  this._initialized = new goog.async.Deferred();
 };
 
 /**
@@ -57,21 +75,10 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end) {
   var self = this;
   var deferred = new goog.async.Deferred();
 
-  if (!this._header) {
-    this._reader.readHeader()
-      .then(function(header) {
-        self._header = header;
-        self.query(chr, start, end).chainDeferred(deferred);
-      });
-    return deferred;
-  }
-
-  if (!this._chrTree) {
-    this._reader.readChrTree(this._header)
-      .then(function(chrTree) {
-        self._chrTree = chrTree;
-        self.query(chr, start, end).chainDeferred(deferred);
-      });
+  if (!this['initialized'].hasFired()) {
+    this['initialized'].then(function() {
+      self.query(chr, start, end).chainDeferred(deferred);
+    });
     return deferred;
   }
 
@@ -143,4 +150,77 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end) {
   deferred.callback(ret);
 
   return deferred;
+};
+
+/**
+ * @type {goog.async.Deferred}
+ * @name {bigwig.BigwigFile#initialized}
+ */
+bigwig.BigwigFile.prototype.initialized;
+
+/**
+ * @type {{basesCovered: string, min: number, max: number, sumData: number, sumSquares: number}}
+ * @name {bigwig.BigwigFile#summary}
+ */
+bigwig.BigwigFile.prototype.summary;
+
+Object.defineProperties(bigwig.BigwigFile.prototype, {
+  'initialized': { get: /** @type {function (this:bigwig.BigwigFile)} */ (function() {
+    if (this._initializationStarted) {
+      return this._initialized;
+    }
+
+    this._initializationStarted = true;
+    this._initialize();
+    return this._initialized;
+  })},
+
+  'summary': { get: /** @type {function (this:bigwig.BigwigFile)} */ (function() {
+    return this._summary ? {
+      'basesCovered': this._summary.basesCovered.toString(),
+      'min': this._summary.minVal,
+      'max': this._summary.maxVal,
+      'sumData': this._summary.sumData,
+      'sumSquares': this._summary.sumSquares
+    } : null;
+  })}
+});
+
+/**
+ * @returns {goog.async.Deferred.<bigwig.BigwigFile>}
+ * @private
+ */
+bigwig.BigwigFile.prototype._initialize = function() {
+  var self = this;
+  var deferred = new goog.async.Deferred();
+
+  if (!this._header) {
+    this._reader.readHeader()
+      .then(function(header) {
+        self._header = header;
+        self._initialize().chainDeferred(deferred);
+      });
+    return deferred;
+  }
+
+  if (!this._summary) {
+    this._reader.readTotalSummary(this._header)
+      .then(function(totalSummary) {
+        self._summary = totalSummary;
+        self._initialize().chainDeferred(deferred);
+      });
+    return deferred;
+  }
+
+  if (!this._chrTree) {
+    this._reader.readChrTree(this._header)
+      .then(function(chrTree) {
+        self._chrTree = chrTree;
+        self._initialize().chainDeferred(deferred);
+      });
+    return deferred;
+  }
+
+  this._initialized.callback(this);
+  return this._initialized;
 };
