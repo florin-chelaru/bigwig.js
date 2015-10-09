@@ -39,20 +39,21 @@ goog.inherits(bigwig.ChrTree, bigwig.Tree);
 bigwig.ChrTree.Node = function(node) {
   bigwig.Tree.Node.apply(this, arguments);
 
+  // Export properties:
   /**
    * @type {string|undefined}
    */
-  this.key = node.key;
+  this['key'] = node.key;
 
   /**
    * @type {number|undefined}
    */
-  this.chrId = node.chrId;
+  this['chrId'] = node.chrId;
 
   /**
    * @type {number|undefined}
    */
-  this.chrSize = node.chrSize;
+  this['chrSize'] = node.chrSize;
 };
 
 goog.inherits(bigwig.ChrTree.Node, bigwig.Tree.Node);
@@ -63,27 +64,54 @@ goog.inherits(bigwig.ChrTree.Node, bigwig.Tree.Node);
  */
 bigwig.ChrTree.prototype.getLeaf = function (chrIdOrKey) {
   if (typeof chrIdOrKey == 'number') {
-    if (!this._leavesById) {
-      var leavesById = {};
-      this.dfs(function (node) {
-        if (!node.children) {
-          leavesById[node.chrId] = node;
-        }
-      });
-      this._leavesById = leavesById;
-    }
+    this._initializeLeavesById();
     return this._leavesById[chrIdOrKey];
   }
 
   // else typeof chrIdOrKey == 'string'
+  this._initializeLeavesByKey();
+  return this._leavesByKey[chrIdOrKey];
+};
+
+/**
+ * @type {Array.<bigwig.ChrTree.Node>}
+ * @name {bigwig.ChrTree#leaves}
+ */
+bigwig.ChrTree.prototype.leaves;
+
+Object.defineProperties(bigwig.ChrTree.prototype, {
+  leaves: { get: /** @type {function (this:bigwig.ChrTree)} */ (function() {
+    this._initializeLeavesByKey();
+    return u.map(this._leavesByKey, function(node) { return node; });
+  })}
+});
+
+/**
+ * @private
+ */
+bigwig.ChrTree.prototype._initializeLeavesByKey = function() {
   if (!this._leavesByKey) {
     var leavesByKey = {};
-    this.dfs(function (node) {
+    this.dfs(function(node) {
       if (!node.children) {
-        leavesByKey[node.key] = node;
+        leavesByKey[node['key']] = node;
       }
     });
     this._leavesByKey = leavesByKey;
   }
-  return this._leavesByKey[chrIdOrKey];
+};
+
+/**
+ * @private
+ */
+bigwig.ChrTree.prototype._initializeLeavesById = function() {
+  if (!this._leavesById) {
+    var leavesById = {};
+    this.dfs(function (node) {
+      if (!node.children) {
+        leavesById[node['chrId']] = node;
+      }
+    });
+    this._leavesById = leavesById;
+  }
 };

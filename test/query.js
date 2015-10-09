@@ -20,6 +20,7 @@ main.controller('Query', ['$scope', function($scope) {
   $scope.results = [];
   $scope.success = false;
   $scope.initialized = false;
+  $scope.chromosomes = [];
 
   $scope.bigwig = null;
 
@@ -65,8 +66,8 @@ main.controller('Query', ['$scope', function($scope) {
     }
 
     if (!this.bigwig) {
-      this.bigwig = new bigwig.BigwigFile(this.file, 'http://epiviz-dev.cbcb.umd.edu/bigwig/partial.php');
-      //this.bigwig = new bigwig.BigwigFile(this.file, 'http://localhost/bigwig/test/partial.php');
+      //this.bigwig = new bigwig.BigwigFile(this.file, 'http://epiviz-dev.cbcb.umd.edu/bigwig/partial.php');
+      this.bigwig = new bigwig.BigwigFile(this.file, 'http://localhost/bigwig/test/partial.php');
     }
 
     var self = this;
@@ -74,6 +75,7 @@ main.controller('Query', ['$scope', function($scope) {
       .then(function(file) {
         self.minVal = file.summary.min;
         self.maxVal = file.summary.max;
+        self.chromosomes = file.chromosomes;
         self.initialized = true;
         self.message = 'Initialized! Getting data...';
         if (!self.$$phase) {

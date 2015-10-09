@@ -86,7 +86,7 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end) {
    * @type {bigwig.ChrTree.Node}
    */
   var chrNode = this._chrTree.getLeaf(chr);
-  var chrId = /** @type {number} */ (chrNode.chrId);
+  var chrId = /** @type {number} */ (chrNode['chrId']);
 
   if (!this._indexTree) {
     this._reader.readRootedIndexBlock(this._header, chrId, start, end)
@@ -183,6 +183,10 @@ Object.defineProperties(bigwig.BigwigFile.prototype, {
       'sumData': this._summary.sumData,
       'sumSquares': this._summary.sumSquares
     } : null;
+  })},
+
+  'chromosomes': { get: /** @type {function (this:bigwig.BigwigFile)} */ (function() {
+    return this._chrTree ? this._chrTree.leaves : null;
   })}
 });
 

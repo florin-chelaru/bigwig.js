@@ -283,8 +283,8 @@ bigwig.BigwigReader.prototype.readChrTree = function(header) {
         data.items.forEach(function(item) {
           var child = new bigwig.ChrTree.Node({ key: item.key });
           if (data.node.isLeaf) {
-            child.chrId = item.chrId;
-            child.chrSize = item.chrSize;
+            child['chrId'] = item.chrId;
+            child['chrSize'] = item.chrSize;
           } else {
             self.readChrTreeNodeItems(header, chrTreeHeader, item.childOffset)
               .then(function(data) {

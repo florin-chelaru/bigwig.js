@@ -12,7 +12,8 @@ var u = {
     "evaluateFullyQualifiedTypeName": function () {},
     "applyConstructor": function () {}
   },
-  "each": function () {}
+  "each": function () {},
+  "map": function() {}
 };
 
 var Zlib = {

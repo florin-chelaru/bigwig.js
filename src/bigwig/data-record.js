@@ -82,7 +82,7 @@ bigwig.DataRecord.prototype.value;
 
 Object.defineProperties(bigwig.DataRecord.prototype, {
 
-  'chrName': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { return this._chrTree ? this._chrTree.getLeaf(this['chr']).key : this['chr']; }) },
+  'chrName': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { return this._chrTree ? this._chrTree.getLeaf(this['chr'])['key'] : this['chr']; }) },
 
   'chr': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { return this._sectionHeader.chrId; }) },
 
