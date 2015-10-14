@@ -110,7 +110,7 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
     if (!zoom.maxItems) { zoom.maxItems = zoom.maxBases; }
     var basesPerItem = this._zoomHeaders.map(function(z) { return z.reductionLevel; });
     var i = -1;
-    if (end - start <= zoom.maxBases) { ++i; }
+    if (end - start > zoom.maxBases) { ++i; }
     if (i == 0) {
       for (; i < this._zoomHeaders.length - 1; ++i) {
         if ((end - start) / basesPerItem[i] <= zoom.maxItems) { break; }
