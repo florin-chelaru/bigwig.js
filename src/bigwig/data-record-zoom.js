@@ -58,19 +58,19 @@ Object.defineProperties(bigwig.DataRecordZoom.prototype, {
 bigwig.DataRecordZoom.prototype.value = function(aggregate) {
   var Aggregate = bigwig.DataRecord.Aggregate;
   switch (aggregate) {
-    case Aggregate.MIN:
+    case Aggregate['MIN']:
       return this._record.minVal;
-    case Aggregate.MAX:
+    case Aggregate['MAX']:
       return this._record.maxVal;
-    case Aggregate.SUM:
+    case Aggregate['SUM']:
       return this._record.sumData;
-    case Aggregate.SUMSQ:
+    case Aggregate['SUMSQ']:
       return this._record.sumSquares;
-    case Aggregate.NORM:
+    case Aggregate['NORM']:
       return Math.sqrt(this._record.sumSquares / this._record.validCount);
-    case Aggregate.CNT:
+    case Aggregate['CNT']:
       return this._record.validCount;
-    case Aggregate.AVG:
+    case Aggregate['AVG']:
     default:
       return this._record.sumData / this._record.validCount;
   }

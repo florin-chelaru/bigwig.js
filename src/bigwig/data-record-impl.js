@@ -79,16 +79,16 @@ Object.defineProperties(bigwig.DataRecordImpl.prototype, {
 bigwig.DataRecordImpl.prototype.value = function(aggregate) {
   var Aggregate = bigwig.DataRecord.Aggregate;
   switch (aggregate) {
-    case Aggregate.SUMSQ:
+    case Aggregate['SUMSQ']:
       return this._record.value * this._record.value;
-    case Aggregate.NORM:
+    case Aggregate['NORM']:
       return Math.abs(this._record.value);
-    case Aggregate.CNT:
+    case Aggregate['CNT']:
       return 1;
-    case Aggregate.MIN:
-    case Aggregate.MAX:
-    case Aggregate.SUM:
-    case Aggregate.AVG:
+    case Aggregate['MIN']:
+    case Aggregate['MAX']:
+    case Aggregate['SUM']:
+    case Aggregate['AVG']:
     default:
       return this._record.value;
   }

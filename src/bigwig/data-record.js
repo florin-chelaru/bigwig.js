@@ -50,13 +50,13 @@ Object.defineProperties(bigwig.DataRecord.prototype, {
  * @enum {number}
  */
 bigwig.DataRecord.Aggregate = {
-  MIN: 0,
-  MAX: 1,
-  SUM: 2,
-  SUMSQ: 3,
-  AVG: 4,
-  NORM: 5,
-  CNT: 6
+  'MIN': 0,
+  'MAX': 1,
+  'SUM': 2,
+  'SUMSQ': 3,
+  'AVG': 4,
+  'NORM': 5,
+  'CNT': 6
 };
 
 /**
