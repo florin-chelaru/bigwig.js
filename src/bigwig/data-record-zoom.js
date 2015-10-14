@@ -48,7 +48,30 @@ Object.defineProperties(bigwig.DataRecordZoom.prototype, {
 
   'start': { get: /** @type {function (this:bigwig.DataRecordZoom)} */ (function() { return this._record.start; })},
 
-  'end': { get: /** @type {function (this:bigwig.DataRecordZoom)} */ (function() { return this._record.end; })},
-
-  'value': { get: /** @type {function (this:bigwig.DataRecordZoom)} */ (function() { return this._record.sumData / this._record.validCount; }) }
+  'end': { get: /** @type {function (this:bigwig.DataRecordZoom)} */ (function() { return this._record.end; })}
 });
+
+/**
+ * @param {bigwig.DataRecord.Aggregate} [aggregate]
+ * @override
+ */
+bigwig.DataRecordZoom.prototype.value = function(aggregate) {
+  var Aggregate = bigwig.DataRecord.Aggregate;
+  switch (aggregate) {
+    case Aggregate.MIN:
+      return this._record.minVal;
+    case Aggregate.MAX:
+      return this._record.maxVal;
+    case Aggregate.SUM:
+      return this._record.sumData;
+    case Aggregate.SUMSQ:
+      return this._record.sumSquares;
+    case Aggregate.NORM:
+      return Math.sqrt(this._record.sumSquares / this._record.validCount);
+    case Aggregate.CNT:
+      return this._record.validCount;
+    case Aggregate.AVG:
+    default:
+      return this._record.sumData / this._record.validCount;
+  }
+};

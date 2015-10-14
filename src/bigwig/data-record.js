@@ -35,12 +35,6 @@ bigwig.DataRecord.prototype.start;
  */
 bigwig.DataRecord.prototype.end;
 
-/**
- * @type {number}
- * @name {bigwig.DataRecord#value}
- */
-bigwig.DataRecord.prototype.value;
-
 Object.defineProperties(bigwig.DataRecord.prototype, {
 
   'chrName': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); }) },
@@ -49,10 +43,28 @@ Object.defineProperties(bigwig.DataRecord.prototype, {
 
   'start': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); })},
 
-  'end': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); })},
-
-  'value': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); }) }
+  'end': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); })}
 });
+
+/**
+ * @enum {number}
+ */
+bigwig.DataRecord.Aggregate = {
+  MIN: 0,
+  MAX: 1,
+  SUM: 2,
+  SUMSQ: 3,
+  AVG: 4,
+  NORM: 5,
+  CNT: 6
+};
+
+/**
+ * @param {bigwig.DataRecord.Aggregate} [aggregate]
+ */
+bigwig.DataRecord.prototype.value = function(aggregate) {
+  throw new bigwig.BigwigException('Abstract method not implemented');
+};
 
 /**
  * @returns {string}

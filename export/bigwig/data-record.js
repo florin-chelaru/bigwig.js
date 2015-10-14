@@ -7,3 +7,6 @@
 goog.require('bigwig.DataRecord');
 
 goog.exportSymbol('bigwig.DataRecord', bigwig.DataRecord);
+goog.exportProperty(bigwig.DataRecord.prototype, 'value', bigwig.DataRecord.prototype.value);
+
+goog.exportSymbol('bigwig.DataRecord.Aggregate', bigwig.DataRecord.Aggregate);

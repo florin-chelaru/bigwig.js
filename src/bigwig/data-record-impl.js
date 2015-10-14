@@ -69,7 +69,27 @@ Object.defineProperties(bigwig.DataRecordImpl.prototype, {
   'end': { get: /** @type {function (this:bigwig.DataRecordImpl)} */ (function() {
     if (this._record.chromEnd != undefined) { return this._record.chromEnd; }
     return this['start'] + this._sectionHeader.itemSpan;
-  })},
-
-  'value': { get: /** @type {function (this:bigwig.DataRecordImpl)} */ (function() { return this._record.value; }) }
+  })}
 });
+
+/**
+ * @param {bigwig.DataRecord.Aggregate} [aggregate]
+ * @override
+ */
+bigwig.DataRecordImpl.prototype.value = function(aggregate) {
+  var Aggregate = bigwig.DataRecord.Aggregate;
+  switch (aggregate) {
+    case Aggregate.SUMSQ:
+      return this._record.value * this._record.value;
+    case Aggregate.NORM:
+      return Math.abs(this._record.value);
+    case Aggregate.CNT:
+      return 1;
+    case Aggregate.MIN:
+    case Aggregate.MAX:
+    case Aggregate.SUM:
+    case Aggregate.AVG:
+    default:
+      return this._record.value;
+  }
+};
