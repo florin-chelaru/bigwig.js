@@ -101,7 +101,7 @@ main.controller('Query', ['$scope', function($scope) {
         }
 
         var zoomLevel = self.zoomLevel == 'none' ? undefined : parseInt(self.zoomLevel);
-        var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end), {maxBases: 100, level: zoomLevel});
+        var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end), {maxBases: 10000, maxItems: 1000, level: zoomLevel});
         return ret;
       })
       .then(function(d) {

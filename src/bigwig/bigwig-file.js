@@ -83,11 +83,10 @@ bigwig.BigwigFile = function(uri, fwdUri) {
  * @param {string|number} chr
  * @param {number} start
  * @param {number} end
- * @param {{level: (number|undefined), maxBases: (number|undefined)}} [zoom]
- * @param {number} [maxBasesPerView]
+ * @param {{level: (number|undefined), maxItems: (number|undefined), maxBases: (number|undefined)}} [zoom]
  * @returns {goog.async.Deferred.<bigwig.DataRecord>}
  */
-bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom, maxBasesPerView) {
+bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
   var self = this;
   var deferred = new goog.async.Deferred();
 
@@ -105,13 +104,17 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom, maxBasesPerV
   var chrId = /** @type {number} */ (chrNode['chrId']);
 
   // Adaptive zoom
-  if (zoom && zoom.level == undefined && zoom.maxBases && zoom.maxBases > 0) {
-    var basesPerItem = { '-1': 1 };
-    this._zoomHeaders.forEach(function(z, i) {
-      basesPerItem[i] = z.reductionLevel;
-    });
-    for (var i = -1; i < this._zoomHeaders.length - 1; ++i) {
-      if ((end - start) / basesPerItem[i] <= zoom.maxBases) { break; }
+  if (zoom && zoom.level == undefined &&
+    ((zoom.maxItems && zoom.maxItems > 0) || (zoom.maxBases && zoom.maxBases > 0))) {
+    if (!zoom.maxBases) { zoom.maxBases = zoom.maxItems; }
+    if (!zoom.maxItems) { zoom.maxItems = zoom.maxBases; }
+    var basesPerItem = this._zoomHeaders.map(function(z) { return z.reductionLevel; });
+    var i = -1;
+    if (end - start <= zoom.maxBases) { ++i; }
+    if (i == 0) {
+      for (; i < this._zoomHeaders.length - 1; ++i) {
+        if ((end - start) / basesPerItem[i] <= zoom.maxItems) { break; }
+      }
     }
 
     zoom.level = i;
