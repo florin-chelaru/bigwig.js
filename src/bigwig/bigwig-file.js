@@ -12,7 +12,9 @@ goog.require('bigwig.models.Record');
 
 goog.require('bigwig.ChrTree');
 goog.require('bigwig.IndexTree');
-goog.require('bigwig.DataRecord');
+goog.require('bigwig.DataRecordImpl');
+goog.require('bigwig.DataRecordZoom');
+
 
 goog.require('goog.async.Deferred');
 
@@ -53,6 +55,18 @@ bigwig.BigwigFile = function(uri, fwdUri) {
   this._indexTree = null;
 
   /**
+   * @type {Array.<bigwig.models.ZoomHeader>}
+   * @private
+   */
+  this._zoomHeaders = null;
+
+  /**
+   * @type {Array.<bigwig.IndexTree>}
+   * @private
+   */
+  this._zoomTrees = null;
+
+  /**
    * @type {boolean}
    * @private
    */
@@ -69,15 +83,17 @@ bigwig.BigwigFile = function(uri, fwdUri) {
  * @param {string|number} chr
  * @param {number} start
  * @param {number} end
+ * @param {{level: (number|undefined), maxBases: (number|undefined)}} [zoom]
+ * @param {number} [maxBasesPerView]
  * @returns {goog.async.Deferred.<bigwig.DataRecord>}
  */
-bigwig.BigwigFile.prototype.query = function(chr, start, end) {
+bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom, maxBasesPerView) {
   var self = this;
   var deferred = new goog.async.Deferred();
 
   if (!this['initialized'].hasFired()) {
     this['initialized'].then(function() {
-      self.query(chr, start, end).chainDeferred(deferred);
+      self.query(chr, start, end, zoom).chainDeferred(deferred);
     });
     return deferred;
   }
@@ -88,11 +104,28 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end) {
   var chrNode = this._chrTree.getLeaf(chr);
   var chrId = /** @type {number} */ (chrNode['chrId']);
 
-  if (!this._indexTree) {
-    this._reader.readRootedIndexBlock(this._header, chrId, start, end)
+  // Adaptive zoom
+  if (zoom && zoom.level == undefined && zoom.maxBases && zoom.maxBases > 0) {
+    var basesPerItem = { '-1': 1 };
+    this._zoomHeaders.forEach(function(z, i) {
+      basesPerItem[i] = z.reductionLevel;
+    });
+    for (var i = -1; i < this._zoomHeaders.length - 1; ++i) {
+      if ((end - start) / basesPerItem[i] <= zoom.maxBases) { break; }
+    }
+
+    zoom.level = i;
+  }
+  var useZoom = zoom && (zoom.level >= 0);
+
+  var indexTree = useZoom ? this._zoomTrees[zoom.level]: this._indexTree;
+  if (!indexTree) {
+    var treeOffset = useZoom ? this._zoomHeaders[zoom.level].indexOffset : this._header.fullIndexOffset;
+    this._reader.readRootedIndexBlock(this._header, chrId, start, end, treeOffset)
       .then(function(tree) {
-        self._indexTree = tree;
-        self.query(chrId, start, end).chainDeferred(deferred);
+        if (useZoom) { self._zoomTrees[zoom.level] = tree; }
+        else { self._indexTree = tree; }
+        self.query(chrId, start, end, zoom).chainDeferred(deferred);
       });
     return deferred;
   }
@@ -100,7 +133,7 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end) {
   /**
    * @type {Array.<bigwig.IndexTree.Node>}
    */
-  var nodes = this._indexTree.query(chrId, start, end);
+  var nodes = indexTree.query(chrId, start, end);
   var remaining = 0;
   nodes.forEach(function(node) {
     if (!node.isLeaf) {
@@ -110,7 +143,7 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end) {
           node.children = children;
           --remaining;
           if (!remaining) {
-            self.query(chrId, start, end).chainDeferred(deferred);
+            self.query(chrId, start, end, zoom).chainDeferred(deferred);
           }
         });
     }
@@ -122,22 +155,38 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end) {
   nodes.forEach(function(node) {
     if (!node.dataRecords) {
       ++remaining;
-      self._reader.readData(self._header, node)
-        .then(
-        /**
-         * @param {{sectionHeader: bigwig.models.SectionHeader, records: Array.<bigwig.models.Record>}} d
-         */
-        function(d) {
-          node.dataRecords = d.records.map(function(r, i) {
-            return new bigwig.DataRecord(node, d.sectionHeader, r, i, self._chrTree);
-          });
 
-          --remaining;
-          if (!remaining) {
-            self.query(chrId, start, end).chainDeferred(deferred);
-          }
-        }
-      )
+      if (useZoom) {
+        self._reader.readZoomData(self._header, node)
+          .then(
+          /**
+           * @param {{records: Array.<bigwig.models.ZoomRecord>}} d
+           */
+          function (d) {
+            node.dataRecords = d.records.map(function(r) { return new bigwig.DataRecordZoom(node, r, self._chrTree); });
+
+            --remaining;
+            if (!remaining) {
+              self.query(chrId, start, end, zoom).chainDeferred(deferred);
+            }
+          });
+      } else {
+        self._reader.readData(self._header, node)
+          .then(
+          /**
+           * @param {{sectionHeader: bigwig.models.SectionHeader, records: Array.<bigwig.models.Record>}} d
+           */
+          function (d) {
+            node.dataRecords = d.records.map(function(r, i) {
+              return new bigwig.DataRecordImpl(node, d.sectionHeader, r, i, self._chrTree);
+            });
+
+            --remaining;
+            if (!remaining) {
+              self.query(chrId, start, end, zoom).chainDeferred(deferred);
+            }
+          });
+      }
     }
   });
 
@@ -164,6 +213,12 @@ bigwig.BigwigFile.prototype.initialized;
  */
 bigwig.BigwigFile.prototype.summary;
 
+/**
+ * @type {number}
+ * @name {bigwig.BigwigFile#zoomLevels}
+ */
+bigwig.BigwigFile.prototype.zoomLevels;
+
 Object.defineProperties(bigwig.BigwigFile.prototype, {
   'initialized': { get: /** @type {function (this:bigwig.BigwigFile)} */ (function() {
     if (this._initializationStarted) {
@@ -187,6 +242,10 @@ Object.defineProperties(bigwig.BigwigFile.prototype, {
 
   'chromosomes': { get: /** @type {function (this:bigwig.BigwigFile)} */ (function() {
     return this._chrTree ? this._chrTree.leaves : null;
+  })},
+
+  'zoomLevels': { get: /** @type {function (this:bigwig.BigwigFile)} */ (function() {
+    return this._header ? this._header.zoomLevels : null;
   })}
 });
 
@@ -223,6 +282,19 @@ bigwig.BigwigFile.prototype._initialize = function() {
         self._initialize().chainDeferred(deferred);
       });
     return deferred;
+  }
+
+  if (!this._zoomHeaders) {
+    this._reader.readZoomHeaders(this._header)
+      .then(function(zoomHeaders) {
+        self._zoomHeaders = zoomHeaders;
+        self._initialize().chainDeferred(deferred);
+      });
+    return deferred;
+  }
+
+  if (!this._zoomTrees) {
+    this._zoomTrees = new Array(this._header.zoomLevels);
   }
 
   this._initialized.callback(this);

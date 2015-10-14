@@ -12,6 +12,11 @@
 <br />
 
 <div ng-show="initialized">
+  <label>Zoom level:</label><br>
+  <select ng-model="zoomLevel">
+    <option value="none">None</option>
+    <option ng-repeat="level in zoomLevels" value="{{ level }}">{{ level }}</option>
+  </select><br />
   <label>Minval:</label><span>{{ minVal }}</span><br/>
   <label>Maxval:</label><span>{{ maxVal }}</span>
 </div><br/>
@@ -49,5 +54,12 @@
       <td>{{ result.end }}</td>
       <td>{{ result.value }}</td>
     </tr>
+    <!--<tr ng-repeat="result in results">
+      <td>{{ result.chrId }}</td>
+      <td>{{ result.start }}</td>
+      <td>{{ result.end }}</td>
+      <td>{{ result.minVal }}</td>
+      <td>{{ result.end - result.start }}</td>
+    </tr>-->
   </table>
 </div>

@@ -26,6 +26,7 @@ goog.require('bigwig.models.RTreeNodeLeaf');
 goog.require('bigwig.models.FixedStepRecord');
 goog.require('bigwig.models.VariableStepRecord');
 goog.require('bigwig.models.BedGraphRecord');
+goog.require('bigwig.models.ZoomRecord');
 
 goog.require('bigwig.ChrTree');
 
@@ -101,6 +102,11 @@ bigwig.BigwigReader.R_TREE_NODE_LEAF_SIZE = bigwig.models.BigwigStruct.sizeOf(bi
 bigwig.BigwigReader.SECTION_HEADER_SIZE = bigwig.models.BigwigStruct.sizeOf(bigwig.models.SectionHeader);
 
 /**
+ * @const {number}
+ */
+bigwig.BigwigReader.ZOOM_RECORD_SIZE = bigwig.models.BigwigStruct.sizeOf(bigwig.models.ZoomRecord);
+
+/**
  * @type {Object.<number, Array>}
  */
 bigwig.BigwigReader.RECORD_TYPES = {
@@ -160,7 +166,6 @@ bigwig.BigwigReader.prototype.readHeader = function() {
 };
 
 /**
- * TODO: Another method that reads all zoom headers
  * @param {bigwig.models.Header} header
  * @param {number} index
  * @returns {goog.async.Deferred.<bigwig.models.ZoomHeader>}
@@ -176,6 +181,30 @@ bigwig.BigwigReader.prototype.readZoomHeader = function(header, index) {
     deferred.callback(ret);
   });
 
+  return deferred;
+};
+
+/**
+ * @param {bigwig.models.Header} header
+ * @returns {goog.async.Deferred.<Array.<bigwig.models.ZoomHeader>>}
+ */
+bigwig.BigwigReader.prototype.readZoomHeaders = function(header) {
+  var zoomHeaders = new Array(header.zoomLevels);
+  var remaining = header.zoomLevels;
+  var deferred = new goog.async.Deferred();
+  var self = this;
+  for (var i = 0; i < header.zoomLevels; ++i) {
+    (function(i) {
+      self.readZoomHeader(header, i)
+        .then(function(d) {
+          zoomHeaders[i] = d;
+          --remaining;
+          if (!remaining) {
+            deferred.callback(zoomHeaders);
+          }
+        });
+    })(i);
+  }
   return deferred;
 };
 
@@ -324,12 +353,12 @@ bigwig.BigwigReader.prototype.readDataCount = function(header) {
 
 /**
  * @param {bigwig.models.Header} header
+ * @param {goog.math.Long} [offset]
  * @returns {goog.async.Deferred.<bigwig.models.RTreeHeader>}
  */
-bigwig.BigwigReader.prototype.readRTreeHeader = function(header) {
+bigwig.BigwigReader.prototype.readRTreeHeader = function(header, offset) {
   var deferred = new goog.async.Deferred();
-  /** @type {goog.math.Long} */
-  var offset = header.fullIndexOffset;
+  offset = offset || header.fullIndexOffset;
   this.get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_HEADER_SIZE)), function(e) {
     var buf = e.target.response;
     var ret = bigwig.models.RTreeHeader.fromArrayBuffer(buf, header.littleEndian);
@@ -356,7 +385,6 @@ bigwig.BigwigReader.prototype.readRTreeNode = function(header, offset) {
 };
 
 /**
- * TODO: Expand once we find a bigwig file with more than one level in the tree
  * @param {bigwig.models.Header} header
  * @param {goog.math.Long} offset
  * @returns {goog.async.Deferred.<{node: bigwig.models.RTreeNode, items: Array.<bigwig.models.RTreeNodeItem|bigwig.models.RTreeNodeLeaf>}>}
@@ -475,14 +503,19 @@ bigwig.BigwigReader.prototype.readRTreeBranch = function(header) {
 bigwig.BigwigReader.prototype.readData = function(header, leaf) {
   var self = this;
   var deferred = new goog.async.Deferred();
-  this.get(leaf.dataOffset, leaf.dataOffset.add(leaf.dataSize), function(e) {
+
+  var start = leaf.dataOffset;
+  var end = leaf.dataOffset.add(leaf.dataSize);
+
+  this.get(start, end, function(e) {
     var buf = e.target.response;
     // TODO: Check whether it is compressed or not
-    var compressed = new Uint8Array(buf);
+    var compressed = new Uint8Array(buf, 0);
     var inflate = new Zlib.Inflate(compressed);
     var plain = inflate.decompress();
 
     var sectionHeader = bigwig.models.SectionHeader.fromDataView(new DataView(plain.buffer, 0, bigwig.BigwigReader.SECTION_HEADER_SIZE), header.littleEndian);
+
     var records = [];
 
     var recordType = bigwig.BigwigReader.RECORD_TYPES[sectionHeader.type][0];
@@ -493,6 +526,39 @@ bigwig.BigwigReader.prototype.readData = function(header, leaf) {
     }
 
     deferred.callback({sectionHeader: sectionHeader, records: records});
+  });
+
+  return deferred;
+};
+
+/**
+ * @param {bigwig.models.Header} header
+ * @param {bigwig.models.RTreeNodeLeaf|bigwig.IndexTree.Node|{dataOffset: goog.math.Long, dataSize: goog.math.Long}} leaf
+ * @returns {goog.async.Deferred.<{records: Array.<bigwig.models.ZoomRecord>}>}
+ */
+bigwig.BigwigReader.prototype.readZoomData = function(header, leaf) {
+  var self = this;
+  var deferred = new goog.async.Deferred();
+
+  var start = leaf.dataOffset;
+  var end = leaf.dataOffset.add(leaf.dataSize);
+
+  this.get(start, end, function(e) {
+    var buf = e.target.response;
+    // TODO: Check whether it is compressed or not
+    var compressed = new Uint8Array(buf, 0);
+    var inflate = new Zlib.Inflate(compressed);
+    var plain = inflate.decompress();
+
+    var recordSize = bigwig.BigwigReader.ZOOM_RECORD_SIZE;
+    var nRecords = plain.byteLength / recordSize;
+    var records = new Array(nRecords);
+
+    for (var i = 0; i < nRecords; ++i) {
+      records[i] = bigwig.models.ZoomRecord.fromDataView(new DataView(plain.buffer, i * recordSize, recordSize), header.littleEndian);
+    }
+
+    deferred.callback({records: records});
   });
 
   return deferred;
@@ -580,26 +646,28 @@ bigwig.BigwigReader.prototype.readIndexBlock = function(header, chr, start, end,
  * @param {number} chr
  * @param {number} start
  * @param {number} end
+ * @param {goog.math.Long} [offset]
  * @returns {goog.async.Deferred.<bigwig.IndexTree>}
  */
-bigwig.BigwigReader.prototype.readRootedIndexBlock = function(header, chr, start, end) {
+bigwig.BigwigReader.prototype.readRootedIndexBlock = function(header, chr, start, end, offset) {
   var self = this;
   var deferred = new goog.async.Deferred();
 
-  self.readRTreeHeader(header)
+  offset = offset || header.fullIndexOffset;
+  self.readRTreeHeader(header, offset)
     .then(function(d) {
       /** @type {goog.math.Long} */
-      var offset = header.fullIndexOffset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_HEADER_SIZE));
+      var rootOffset = offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_HEADER_SIZE));
       var root = new bigwig.IndexTree.Node({
         isLeaf: false,
         startChrId: d.startChromIx,
         endChrId: d.endChromIx,
         startBase: d.startBase,
         endBase: d.endBase,
-        dataOffset: offset
+        dataOffset: rootOffset
       });
 
-      self.readIndexBlock(header, chr, start, end, offset)
+      self.readIndexBlock(header, chr, start, end, rootOffset)
         .then(function(children) {
           root.children = children;
           deferred.callback(new bigwig.IndexTree(root));

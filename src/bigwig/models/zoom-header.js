@@ -14,6 +14,30 @@ goog.require('bigwig.models.BigwigStruct');
  */
 bigwig.models.ZoomHeader = function() {
   bigwig.models.BigwigStruct.apply(this, arguments);
+
+  /**
+   * @type {number}
+   * @name bigwig.models.ZoomHeader#reductionLevel
+   */
+  this.reductionLevel;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.ZoomHeader#reserved
+   */
+  this.reserved;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.ZoomHeader#dataOffset
+   */
+  this.dataOffset;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.ZoomHeader#indexOffset
+   */
+  this.indexOffset;
 };
 
 goog.inherits(bigwig.models.ZoomHeader, bigwig.models.BigwigStruct);

@@ -14,15 +14,31 @@ if (window['BW_DEBUG']) {
 var main = angular.module('main', []);
 
 main.controller('Query', ['$scope', function($scope) {
-  $scope.file = 'http://egg2.wustl.edu/roadmap/data/byFileType/signal/consolidated/macs2signal/pval/E001-H3K4me1.pval.signal.bigwig';
+  $scope.file = 'http://localhost/E120-H3K9ac.pval.signal.bigwig';//'http://egg2.wustl.edu/roadmap/data/byFileType/signal/consolidated/macs2signal/pval/E001-H3K4me1.pval.signal.bigwig';
   $scope.query = 'chr=chr1&start=0&end=100000';
   $scope.message = 'Result will be shown here.';
   $scope.results = [];
   $scope.success = false;
   $scope.initialized = false;
   $scope.chromosomes = [];
+  $scope.zoomLevel = 'none';
+  $scope.zoomLevels = [];
 
   $scope.bigwig = null;
+
+  /*var header, zoomHeaders;
+  var reader = new bigwig.BigwigReader('http://localhost/E120-H3K9ac.pval.signal.bigwig ');
+  reader.readHeader()
+    .then(function(d) {
+      /!**
+       * @type {bigwig.models.Header}
+       *!/
+      header = d;
+      return reader.readZoomHeaders(header);
+    })
+    .then(function(d) {
+      zoomHeaders = d;
+    });*/
 
   var extractArgs = function(argsStr) {
     var argPairs = argsStr.split('&');
@@ -67,7 +83,8 @@ main.controller('Query', ['$scope', function($scope) {
 
     if (!this.bigwig) {
       //this.bigwig = new bigwig.BigwigFile(this.file, 'http://epiviz-dev.cbcb.umd.edu/bigwig/partial.php');
-      this.bigwig = new bigwig.BigwigFile(this.file, 'http://localhost/bigwig/test/partial.php');
+      //this.bigwig = new bigwig.BigwigFile(this.file, 'http://localhost/bigwig/test/partial.php');
+      this.bigwig = new bigwig.BigwigFile(this.file);
     }
 
     var self = this;
@@ -78,10 +95,13 @@ main.controller('Query', ['$scope', function($scope) {
         self.chromosomes = file.chromosomes;
         self.initialized = true;
         self.message = 'Initialized! Getting data...';
+        self.zoomLevels = u.array.range(file.zoomLevels);
         if (!self.$$phase) {
           self.$apply();
         }
-        var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end));
+
+        var zoomLevel = self.zoomLevel == 'none' ? undefined : parseInt(self.zoomLevel);
+        var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end), {maxBases: 100, level: zoomLevel});
         return ret;
       })
       .then(function(d) {

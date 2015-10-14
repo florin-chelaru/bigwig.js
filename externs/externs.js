@@ -6,7 +6,7 @@ var u = {
   /**
    * @constructor
    */
-  "Exception": function () {},
+  "Exception": function (message, innerException) {},
   "reflection": {
     "ReflectionException": function () {},
     "evaluateFullyQualifiedTypeName": function () {},
