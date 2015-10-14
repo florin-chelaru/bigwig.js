@@ -104,29 +104,29 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
   var chrId = /** @type {number} */ (chrNode['chrId']);
 
   // Adaptive zoom
-  if (zoom && zoom.level == undefined &&
-    ((zoom.maxItems && zoom.maxItems > 0) || (zoom.maxBases && zoom.maxBases > 0))) {
-    if (!zoom.maxBases) { zoom.maxBases = zoom.maxItems; }
-    if (!zoom.maxItems) { zoom.maxItems = zoom.maxBases; }
+  if (zoom && zoom['level'] == undefined &&
+    ((zoom['maxItems'] && zoom['maxItems'] > 0) || (zoom['maxBases'] && zoom['maxBases'] > 0))) {
+    if (!zoom['maxBases']) { zoom['maxBases'] = zoom['maxItems']; }
+    if (!zoom['maxItems']) { zoom['maxItems'] = zoom['maxBases']; }
     var basesPerItem = this._zoomHeaders.map(function(z) { return z.reductionLevel; });
     var i = -1;
-    if (end - start > zoom.maxBases) { ++i; }
+    if (end - start > zoom['maxBases']) { ++i; }
     if (i == 0) {
       for (; i < this._zoomHeaders.length - 1; ++i) {
-        if ((end - start) / basesPerItem[i] <= zoom.maxItems) { break; }
+        if ((end - start) / basesPerItem[i] <= zoom['maxItems']) { break; }
       }
     }
 
-    zoom.level = i;
+    zoom['level'] = i;
   }
-  var useZoom = zoom && (zoom.level >= 0);
+  var useZoom = zoom && (zoom['level'] >= 0);
 
-  var indexTree = useZoom ? this._zoomTrees[zoom.level]: this._indexTree;
+  var indexTree = useZoom ? this._zoomTrees[zoom['level']]: this._indexTree;
   if (!indexTree) {
-    var treeOffset = useZoom ? this._zoomHeaders[zoom.level].indexOffset : this._header.fullIndexOffset;
+    var treeOffset = useZoom ? this._zoomHeaders[zoom['level']].indexOffset : this._header.fullIndexOffset;
     this._reader.readRootedIndexBlock(this._header, chrId, start, end, treeOffset)
       .then(function(tree) {
-        if (useZoom) { self._zoomTrees[zoom.level] = tree; }
+        if (useZoom) { self._zoomTrees[zoom['level']] = tree; }
         else { self._indexTree = tree; }
         self.query(chrId, start, end, zoom).chainDeferred(deferred);
       });
