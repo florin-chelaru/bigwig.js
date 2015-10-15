@@ -6,7 +6,6 @@
 
 goog.provide('bigwig.BigwigReader');
 
-goog.require('goog.async.Deferred');
 goog.require('goog.math.Long');
 goog.require('goog.string.format');
 
@@ -153,10 +152,10 @@ bigwig.BigwigReader.prototype.get = function(start, end, callback) {
 };
 
 /**
- * @returns {goog.async.Deferred.<bigwig.models.Header>}
+ * @returns {u.async.Deferred.<bigwig.models.Header>}
  */
 bigwig.BigwigReader.prototype.readHeader = function() {
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
   this.get(0, bigwig.BigwigReader.HEADER_SIZE, function(e) {
     var buf = e.target.response;
     var header = bigwig.models.Header.fromArrayBuffer(buf);
@@ -168,11 +167,11 @@ bigwig.BigwigReader.prototype.readHeader = function() {
 /**
  * @param {bigwig.models.Header} header
  * @param {number} index
- * @returns {goog.async.Deferred.<bigwig.models.ZoomHeader>}
+ * @returns {u.async.Deferred.<bigwig.models.ZoomHeader>}
  */
 bigwig.BigwigReader.prototype.readZoomHeader = function(header, index) {
   if (index >= header.zoomLevels || index < 0) { throw new bigwig.BigwigException('Bigwig: invalid zoom index'); }
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
   var offset = bigwig.BigwigReader.HEADER_SIZE;
   var zoomHeaderSize = bigwig.BigwigReader.ZOOM_HEADER_SIZE;
   this.get(offset + index * zoomHeaderSize, offset + (index + 1) * zoomHeaderSize, function(e) {
@@ -186,12 +185,12 @@ bigwig.BigwigReader.prototype.readZoomHeader = function(header, index) {
 
 /**
  * @param {bigwig.models.Header} header
- * @returns {goog.async.Deferred.<Array.<bigwig.models.ZoomHeader>>}
+ * @returns {u.async.Deferred.<Array.<bigwig.models.ZoomHeader>>}
  */
 bigwig.BigwigReader.prototype.readZoomHeaders = function(header) {
   var zoomHeaders = new Array(header.zoomLevels);
   var remaining = header.zoomLevels;
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
   var self = this;
   for (var i = 0; i < header.zoomLevels; ++i) {
     (function(i) {
@@ -210,10 +209,10 @@ bigwig.BigwigReader.prototype.readZoomHeaders = function(header) {
 
 /**
  * @param {bigwig.models.Header} header
- * @returns {goog.async.Deferred.<bigwig.models.TotalSummary>}
+ * @returns {u.async.Deferred.<bigwig.models.TotalSummary>}
  */
 bigwig.BigwigReader.prototype.readTotalSummary = function(header) {
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
   var offset =
     bigwig.BigwigReader.HEADER_SIZE +
     bigwig.BigwigReader.ZOOM_HEADER_SIZE * header.zoomLevels;
@@ -228,10 +227,10 @@ bigwig.BigwigReader.prototype.readTotalSummary = function(header) {
 
 /**
  * @param {bigwig.models.Header} header
- * @returns {goog.async.Deferred.<bigwig.models.ChrTreeHeader>}
+ * @returns {u.async.Deferred.<bigwig.models.ChrTreeHeader>}
  */
 bigwig.BigwigReader.prototype.readChrTreeHeader = function(header) {
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
   /** @type {goog.math.Long} */
   var offset = header.chromosomeTreeOffset;
   this.get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.CHR_TREE_HEADER_SIZE)), function(e) {
@@ -246,10 +245,10 @@ bigwig.BigwigReader.prototype.readChrTreeHeader = function(header) {
 /**
  * @param {bigwig.models.Header} header
  * @param {goog.math.Long} offset
- * @returns {goog.async.Deferred.<bigwig.models.ChrTreeNode>}
+ * @returns {u.async.Deferred.<bigwig.models.ChrTreeNode>}
  */
 bigwig.BigwigReader.prototype.readChrTreeNode = function(header, offset) {
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
   this.get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.CHR_TREE_NODE_SIZE)), function(e) {
     var buf = e.target.response;
     var ret = bigwig.models.ChrTreeNode.fromArrayBuffer(buf, header.littleEndian);
@@ -264,11 +263,11 @@ bigwig.BigwigReader.prototype.readChrTreeNode = function(header, offset) {
  * @param {bigwig.models.Header} header
  * @param {bigwig.models.ChrTreeHeader} treeHeader
  * @param {goog.math.Long} offset
- * @returns {goog.async.Deferred.<{node: bigwig.models.ChrTreeNode, items: Array.<bigwig.models.ChrTreeNodeItem|bigwig.models.ChrTreeNodeLeaf>}>}
+ * @returns {u.async.Deferred.<{node: bigwig.models.ChrTreeNode, items: Array.<bigwig.models.ChrTreeNodeItem|bigwig.models.ChrTreeNodeLeaf>}>}
  */
 bigwig.BigwigReader.prototype.readChrTreeNodeItems = function(header, treeHeader, offset) {
   var self = this;
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
 
   var itemSize = treeHeader.keySize + 8;
   var nodeSize = bigwig.BigwigReader.CHR_TREE_NODE_SIZE;
@@ -293,12 +292,12 @@ bigwig.BigwigReader.prototype.readChrTreeNodeItems = function(header, treeHeader
 
 /**
  * @param {bigwig.models.Header} header
- * @returns {goog.async.Deferred.<bigwig.ChrTree>}
+ * @returns {u.async.Deferred.<bigwig.ChrTree>}
  */
 bigwig.BigwigReader.prototype.readChrTree = function(header) {
   var self = this;
   var root = null;
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
   self.readChrTreeHeader(header)
     .then(function(chrTreeHeader) {
       var treeOffset = header.chromosomeTreeOffset;
@@ -338,10 +337,10 @@ bigwig.BigwigReader.prototype.readChrTree = function(header) {
 
 /**
  * @param {bigwig.models.Header} header
- * @returns {goog.async.Deferred}
+ * @returns {u.async.Deferred}
  */
 bigwig.BigwigReader.prototype.readDataCount = function(header) {
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
   var offset = header.fullDataOffset;
   this.get(offset, offset.add(goog.math.Long.fromNumber(4)), function(e) {
     var buf = e.target.response;
@@ -354,10 +353,10 @@ bigwig.BigwigReader.prototype.readDataCount = function(header) {
 /**
  * @param {bigwig.models.Header} header
  * @param {goog.math.Long} [offset]
- * @returns {goog.async.Deferred.<bigwig.models.RTreeHeader>}
+ * @returns {u.async.Deferred.<bigwig.models.RTreeHeader>}
  */
 bigwig.BigwigReader.prototype.readRTreeHeader = function(header, offset) {
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
   offset = offset || header.fullIndexOffset;
   this.get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_HEADER_SIZE)), function(e) {
     var buf = e.target.response;
@@ -371,10 +370,10 @@ bigwig.BigwigReader.prototype.readRTreeHeader = function(header, offset) {
 /**
  * @param {bigwig.models.Header} header
  * @param {goog.math.Long} offset
- * @returns {goog.async.Deferred.<bigwig.models.RTreeNode>}
+ * @returns {u.async.Deferred.<bigwig.models.RTreeNode>}
  */
 bigwig.BigwigReader.prototype.readRTreeNode = function(header, offset) {
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
   this.get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_NODE_SIZE)), function(e) {
     var buf = e.target.response;
     var ret = bigwig.models.RTreeNode.fromArrayBuffer(buf, header.littleEndian);
@@ -387,11 +386,11 @@ bigwig.BigwigReader.prototype.readRTreeNode = function(header, offset) {
 /**
  * @param {bigwig.models.Header} header
  * @param {goog.math.Long} offset
- * @returns {goog.async.Deferred.<{node: bigwig.models.RTreeNode, items: Array.<bigwig.models.RTreeNodeItem|bigwig.models.RTreeNodeLeaf>}>}
+ * @returns {u.async.Deferred.<{node: bigwig.models.RTreeNode, items: Array.<bigwig.models.RTreeNodeItem|bigwig.models.RTreeNodeLeaf>}>}
  */
 bigwig.BigwigReader.prototype.readRTreeNodeItems = function(header, offset) {
   var self = this;
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
 
   this.readRTreeNode(header, offset)
     .then(function(node) {
@@ -417,11 +416,11 @@ bigwig.BigwigReader.prototype.readRTreeNodeItems = function(header, offset) {
 
 /**
  * @param {bigwig.models.Header} header
- * @returns {goog.async.Deferred.<{header: bigwig.models.RTreeHeader, nodes: Array.<bigwig.models.RTreeNode>}>}
+ * @returns {u.async.Deferred.<{header: bigwig.models.RTreeHeader, nodes: Array.<bigwig.models.RTreeNode>}>}
  */
 bigwig.BigwigReader.prototype.readRTree = function(header) {
   var self = this;
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
 
   var tree = {nodes:[]};
   //var nodes = [];
@@ -436,9 +435,9 @@ bigwig.BigwigReader.prototype.readRTree = function(header) {
 
       /** @type {goog.math.Long} */
       var offset = header.fullIndexOffset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_HEADER_SIZE));
-      var seq = [new goog.async.Deferred()];
+      var seq = [new u.async.Deferred()];
       for (var i = 0; i < rTreeHeader.itemCount; ++i) {
-        seq.push(new goog.async.Deferred());
+        seq.push(new u.async.Deferred());
         seq[i].then(function(j) {
           //self.readRTreeNodeItems(header, offset)
           self.readRTreeNode(header, offset)
@@ -465,7 +464,7 @@ bigwig.BigwigReader.prototype.readRTree = function(header) {
 
 bigwig.BigwigReader.prototype.readRTreeBranch = function(header) {
   var self = this;
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
 
   var tree = {nodes:[]};
 
@@ -498,11 +497,11 @@ bigwig.BigwigReader.prototype.readRTreeBranch = function(header) {
 /**
  * @param {bigwig.models.Header} header
  * @param {bigwig.models.RTreeNodeLeaf|bigwig.IndexTree.Node|{dataOffset: goog.math.Long, dataSize: goog.math.Long}} leaf
- * @returns {goog.async.Deferred.<{sectionHeader: bigwig.models.SectionHeader, records: Array.<bigwig.models.Record>}>}
+ * @returns {u.async.Deferred.<{sectionHeader: bigwig.models.SectionHeader, records: Array.<bigwig.models.Record>}>}
  */
 bigwig.BigwigReader.prototype.readData = function(header, leaf) {
   var self = this;
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
 
   var start = leaf.dataOffset;
   var end = leaf.dataOffset.add(leaf.dataSize);
@@ -534,11 +533,11 @@ bigwig.BigwigReader.prototype.readData = function(header, leaf) {
 /**
  * @param {bigwig.models.Header} header
  * @param {bigwig.models.RTreeNodeLeaf|bigwig.IndexTree.Node|{dataOffset: goog.math.Long, dataSize: goog.math.Long}} leaf
- * @returns {goog.async.Deferred.<{records: Array.<bigwig.models.ZoomRecord>}>}
+ * @returns {u.async.Deferred.<{records: Array.<bigwig.models.ZoomRecord>}>}
  */
 bigwig.BigwigReader.prototype.readZoomData = function(header, leaf) {
   var self = this;
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
 
   var start = leaf.dataOffset;
   var end = leaf.dataOffset.add(leaf.dataSize);
@@ -570,11 +569,11 @@ bigwig.BigwigReader.prototype.readZoomData = function(header, leaf) {
  * @param {number} start
  * @param {number} end
  * @param {goog.math.Long} offset
- * @returns {goog.async.Deferred.<Array.<bigwig.IndexTree.Node>>}
+ * @returns {u.async.Deferred.<Array.<bigwig.IndexTree.Node>>}
  */
 bigwig.BigwigReader.prototype.readIndexBlock = function(header, chr, start, end, offset) {
   var self = this;
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
 
   self.readRTreeNodeItems(header, offset)
     .then(
@@ -647,11 +646,11 @@ bigwig.BigwigReader.prototype.readIndexBlock = function(header, chr, start, end,
  * @param {number} start
  * @param {number} end
  * @param {goog.math.Long} [offset]
- * @returns {goog.async.Deferred.<bigwig.IndexTree>}
+ * @returns {u.async.Deferred.<bigwig.IndexTree>}
  */
 bigwig.BigwigReader.prototype.readRootedIndexBlock = function(header, chr, start, end, offset) {
   var self = this;
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
 
   offset = offset || header.fullIndexOffset;
   self.readRTreeHeader(header, offset)

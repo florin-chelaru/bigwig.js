@@ -15,9 +15,6 @@ goog.require('bigwig.IndexTree');
 goog.require('bigwig.DataRecordImpl');
 goog.require('bigwig.DataRecordZoom');
 
-
-goog.require('goog.async.Deferred');
-
 /**
  * @param {string} uri
  * @param {string} [fwdUri]
@@ -73,10 +70,10 @@ bigwig.BigwigFile = function(uri, fwdUri) {
   this._initializationStarted = false;
 
   /**
-   * @type {goog.async.Deferred.<bigwig.BigwigFile>}
+   * @type {u.async.Deferred.<bigwig.BigwigFile>}
    * @private
    */
-  this._initialized = new goog.async.Deferred();
+  this._initialized = new u.async.Deferred();
 };
 
 /**
@@ -84,11 +81,11 @@ bigwig.BigwigFile = function(uri, fwdUri) {
  * @param {number} start
  * @param {number} end
  * @param {{level: (number|undefined), maxItems: (number|undefined), maxBases: (number|undefined)}} [zoom]
- * @returns {goog.async.Deferred.<bigwig.DataRecord>}
+ * @returns {u.async.Deferred.<bigwig.DataRecord>}
  */
 bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
   var self = this;
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
 
   if (!this['initialized'].hasFired()) {
     this['initialized'].then(function() {
@@ -205,7 +202,7 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
 };
 
 /**
- * @type {goog.async.Deferred}
+ * @type {u.async.Deferred}
  * @name {bigwig.BigwigFile#initialized}
  */
 bigwig.BigwigFile.prototype.initialized;
@@ -253,12 +250,12 @@ Object.defineProperties(bigwig.BigwigFile.prototype, {
 });
 
 /**
- * @returns {goog.async.Deferred.<bigwig.BigwigFile>}
+ * @returns {u.async.Deferred.<bigwig.BigwigFile>}
  * @private
  */
 bigwig.BigwigFile.prototype._initialize = function() {
   var self = this;
-  var deferred = new goog.async.Deferred();
+  var deferred = new u.async.Deferred();
 
   if (!this._header) {
     this._reader.readHeader()

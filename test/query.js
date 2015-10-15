@@ -4,9 +4,9 @@
  * Time: 2:51 PM
  */
 
+goog.require('goog.async.Deferred');
+
 if (window['BW_DEBUG']) {
-  goog.require('goog.math.Long');
-  goog.require('goog.async.Deferred');
   goog.require('goog.string.format');
   goog.require('bigwig.BigwigFile');
 }
@@ -25,20 +25,6 @@ main.controller('Query', ['$scope', function($scope) {
   $scope.zoomLevels = [];
 
   $scope.bigwig = null;
-
-  /*var header, zoomHeaders;
-  var reader = new bigwig.BigwigReader('http://localhost/E120-H3K9ac.pval.signal.bigwig ');
-  reader.readHeader()
-    .then(function(d) {
-      /!**
-       * @type {bigwig.models.Header}
-       *!/
-      header = d;
-      return reader.readZoomHeaders(header);
-    })
-    .then(function(d) {
-      zoomHeaders = d;
-    });*/
 
   var extractArgs = function(argsStr) {
     var argPairs = argsStr.split('&');
@@ -88,7 +74,8 @@ main.controller('Query', ['$scope', function($scope) {
     }
 
     var self = this;
-    this.bigwig.initialized
+    var init = this.bigwig.initialized;
+    init
       .then(function(file) {
         self.minVal = file.summary.min;
         self.maxVal = file.summary.max;
