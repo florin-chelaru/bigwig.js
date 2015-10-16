@@ -70,10 +70,29 @@ bigwig.BigwigFile = function(uri, fwdUri) {
   this._initializationStarted = false;
 
   /**
-   * @type {u.async.Deferred.<bigwig.BigwigFile>}
+   * @type {Function}
    * @private
    */
-  this._initialized = new u.async.Deferred();
+  this._initializedResolve = null;
+
+  /**
+   * @type {Function}
+   * @private
+   */
+  this._initializedReject = null;
+
+  /**
+   * @type {boolean}
+   * @private
+   */
+  this._initializedFired = false;
+
+  var self = this;
+  /**
+   * @type {Promise} Promise.<bigwig.BigwigFile>
+   * @private
+   */
+  this._initialized = new Promise(function(resolve, reject) { self._initializedResolve = resolve; self._initializedReject = reject; });
 };
 
 /**
@@ -81,17 +100,18 @@ bigwig.BigwigFile = function(uri, fwdUri) {
  * @param {number} start
  * @param {number} end
  * @param {{level: (number|undefined), maxItems: (number|undefined), maxBases: (number|undefined)}} [zoom]
- * @returns {u.async.Deferred.<bigwig.DataRecord>}
+ * @returns {Promise} Promise.<bigwig.DataRecord>}
  */
 bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
   var self = this;
-  var deferred = new u.async.Deferred();
+  var resolve, reject;
+  var promise = new Promise(function() { resolve = arguments[0]; reject = arguments[1]; });
 
-  if (!this['initialized'].hasFired()) {
+  if (!this._initializedFired) {
     this['initialized'].then(function() {
-      self.query(chr, start, end, zoom).chainDeferred(deferred);
+      self.query(chr, start, end, zoom).then(resolve);
     });
-    return deferred;
+    return promise;
   }
 
   /**
@@ -125,9 +145,9 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
       .then(function(tree) {
         if (useZoom) { self._zoomTrees[zoom['level']] = tree; }
         else { self._indexTree = tree; }
-        self.query(chrId, start, end, zoom).chainDeferred(deferred);
+        self.query(chrId, start, end, zoom).then(resolve);
       });
-    return deferred;
+    return promise;
   }
 
   /**
@@ -143,13 +163,13 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
           node.children = children;
           --remaining;
           if (!remaining) {
-            self.query(chrId, start, end, zoom).chainDeferred(deferred);
+            self.query(chrId, start, end, zoom).then(resolve);
           }
         });
     }
   });
 
-  if (remaining) { return deferred; }
+  if (remaining) { return promise; }
 
   remaining = 0;
   nodes.forEach(function(node) {
@@ -167,7 +187,7 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
 
             --remaining;
             if (!remaining) {
-              self.query(chrId, start, end, zoom).chainDeferred(deferred);
+              self.query(chrId, start, end, zoom).then(resolve);
             }
           });
       } else {
@@ -183,26 +203,26 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
 
             --remaining;
             if (!remaining) {
-              self.query(chrId, start, end, zoom).chainDeferred(deferred);
+              self.query(chrId, start, end, zoom).then(resolve);
             }
           });
       }
     }
   });
 
-  if (remaining) { return deferred; }
+  if (remaining) { return promise; }
 
   var ret = nodes
     .map(function(node) { return node.dataRecords.filter(/** @param {bigwig.DataRecord} r */ function(r) { return r['chr'] == chrId && r['start'] < end && r['end'] > start; })})
     .reduce(function(a1, a2) { return a1.concat(a2); });
 
-  deferred.callback(ret);
+  resolve(ret);
 
-  return deferred;
+  return promise;
 };
 
 /**
- * @type {u.async.Deferred}
+ * @type {Promise}
  * @name {bigwig.BigwigFile#initialized}
  */
 bigwig.BigwigFile.prototype.initialized;
@@ -250,53 +270,55 @@ Object.defineProperties(bigwig.BigwigFile.prototype, {
 });
 
 /**
- * @returns {u.async.Deferred.<bigwig.BigwigFile>}
+ * @returns {Promise} Promise.<bigwig.BigwigFile>
  * @private
  */
 bigwig.BigwigFile.prototype._initialize = function() {
   var self = this;
-  var deferred = new u.async.Deferred();
+  var resolve, reject;
+  var promise = new Promise(function() { resolve = arguments[0]; reject = arguments[1]; });
 
   if (!this._header) {
     this._reader.readHeader()
       .then(function(header) {
         self._header = header;
-        self._initialize().chainDeferred(deferred);
+        self._initialize().then(resolve);
       });
-    return deferred;
+    return promise;
   }
 
   if (!this._summary) {
     this._reader.readTotalSummary(this._header)
       .then(function(totalSummary) {
         self._summary = totalSummary;
-        self._initialize().chainDeferred(deferred);
+        self._initialize().then(resolve);
       });
-    return deferred;
+    return promise;
   }
 
   if (!this._chrTree) {
     this._reader.readChrTree(this._header)
       .then(function(chrTree) {
         self._chrTree = chrTree;
-        self._initialize().chainDeferred(deferred);
+        self._initialize().then(resolve);
       });
-    return deferred;
+    return promise;
   }
 
   if (!this._zoomHeaders) {
     this._reader.readZoomHeaders(this._header)
       .then(function(zoomHeaders) {
         self._zoomHeaders = zoomHeaders;
-        self._initialize().chainDeferred(deferred);
+        self._initialize().then(resolve);
       });
-    return deferred;
+    return promise;
   }
 
   if (!this._zoomTrees) {
     this._zoomTrees = new Array(this._header.zoomLevels);
   }
 
-  this._initialized.callback(this);
+  this._initializedFired = true;
+  this._initializedResolve(this);
   return this._initialized;
 };

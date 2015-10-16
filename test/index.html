@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title></title>
+  <title>Bigwig tests</title>
+  <link rel="stylesheet" href="//code.jquery.com/qunit/qunit-1.19.0.css">
   <script src="../bower_components/jquery/dist/jquery.js"></script>
   <script src="../bower_components/angular/angular.js"></script>
   <script src="../bower_components/d3/d3.js"></script>
@@ -16,6 +17,11 @@
   </script>
   <script src="query.js"></script>
 </head>
-<body ng-app="main" ng-controller="Query" ng-include="'body.html'">
+<body ng-app="main" ng-controller="Query">
+  <div ng-include="'body.html'"></div>
+  <!--<div id="qunit" ng-show="!initialized"></div>
+  <div id="qunit-fixture" ng-show="!initialized"></div>
+  <script src="../bower_components/qunit/qunit/qunit.js"></script>
+  <script src="tests.js"></script>-->
 </body>
 </html>

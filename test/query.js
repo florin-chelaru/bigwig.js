@@ -4,8 +4,6 @@
  * Time: 2:51 PM
  */
 
-goog.require('goog.async.Deferred');
-
 if (window['BW_DEBUG']) {
   goog.require('goog.string.format');
   goog.require('bigwig.BigwigFile');
@@ -77,10 +75,10 @@ main.controller('Query', ['$scope', function($scope) {
     var init = this.bigwig.initialized;
     init
       .then(function(file) {
+        $scope.initialized = true;
         self.minVal = file.summary.min;
         self.maxVal = file.summary.max;
         self.chromosomes = file.chromosomes;
-        self.initialized = true;
         self.message = 'Initialized! Getting data...';
         self.zoomLevels = u.array.range(file.zoomLevels);
         if (!self.$$phase) {
@@ -89,6 +87,8 @@ main.controller('Query', ['$scope', function($scope) {
 
         var zoomLevel = self.zoomLevel == 'none' ? undefined : parseInt(self.zoomLevel);
         var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end), {maxBases: 10000, maxItems: 1000, level: zoomLevel});
+        //var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end), {level: zoomLevel});
+        //var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end));
         return ret;
       })
       .then(function(d) {
@@ -99,6 +99,5 @@ main.controller('Query', ['$scope', function($scope) {
           self.$apply();
         }
       });
-
   }
 }]);

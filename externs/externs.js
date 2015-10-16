@@ -15,35 +15,12 @@ var u = {
   "each": function () {},
   "map": function() {},
   "async": {
-    /**
-     * @constructor
-     */
-    "Deferred": function() {},
     "all": function() {},
     "for": function() {},
-    "each": function() {}
+    "each": function() {},
+    "do": function() {}
   }
 };
-
-/**
- * @param {...} args
- */
-u.async.Deferred.prototype.then = function(args) {};
-
-/**
- * @param {...} args
- */
-u.async.Deferred.prototype.callback = function(args) {};
-
-/**
- * @param {...} args
- */
-u.async.Deferred.prototype.chainDeferred = function(args) {};
-
-/**
- * @param {...} args
- */
-u.async.Deferred.prototype.hasFired = function(args) {};
 
 var Zlib = {
   Inflate: function() {}

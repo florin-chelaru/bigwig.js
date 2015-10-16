@@ -24,42 +24,37 @@
 <span>{{ message }}</span>
 <br />
 
-<div ng-show="initialized" style="float: left;">
-  <span><b>Chromosomes</b></span><br/>
-  <table>
-    <thead><tr>
-      <th>Key</th>
-      <th>Id</th>
-      <th>Size</th>
-    </tr></thead>
-    <tr ng-repeat="chr in chromosomes">
-      <td>{{ chr.key }}</td>
-      <td>{{ chr.chrId }}</td>
-      <td>{{ chr.chrSize }}</td>
-    </tr>
-  </table>
-</div>
+<div>
+  <div ng-show="initialized" style="float: left;">
+    <span><b>Chromosomes</b></span><br/>
+    <table>
+      <thead><tr>
+        <th>Key</th>
+        <th>Id</th>
+        <th>Size</th>
+      </tr></thead>
+      <tr ng-repeat="chr in chromosomes">
+        <td>{{ chr.key }}</td>
+        <td>{{ chr.chrId }}</td>
+        <td>{{ chr.chrSize }}</td>
+      </tr>
+    </table>
+  </div>
 
-<div ng-show="success">
-  <table>
-    <thead><tr>
-      <th>Chr</th>
-      <th>Start</th>
-      <th>End</th>
-      <th>Value</th>
-    </tr></thead>
-    <tr ng-repeat="result in results">
-      <td>{{ result.chrName }}</td>
-      <td>{{ result.start }}</td>
-      <td>{{ result.end }}</td>
-      <td>{{ result.value(bigwig.DataRecord.Aggregate.MAX) }}</td>
-    </tr>
-    <!--<tr ng-repeat="result in results">
-      <td>{{ result.chrId }}</td>
-      <td>{{ result.start }}</td>
-      <td>{{ result.end }}</td>
-      <td>{{ result.minVal }}</td>
-      <td>{{ result.end - result.start }}</td>
-    </tr>-->
-  </table>
+  <div ng-show="success">
+    <table>
+      <thead><tr>
+        <th>Chr</th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Value</th>
+      </tr></thead>
+      <tr ng-repeat="result in results">
+        <td>{{ result.chrName }}</td>
+        <td>{{ result.start }}</td>
+        <td>{{ result.end }}</td>
+        <td>{{ result.value(bigwig.DataRecord.Aggregate.MAX) }}</td>
+      </tr>
+    </table>
+  </div>
 </div>
