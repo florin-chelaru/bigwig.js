@@ -18,14 +18,15 @@ goog.require('bigwig.DataRecordZoom');
 /**
  * @param {string} uri
  * @param {string} [fwdUri]
+ * @param {number} [cacheBlockSize] Default is 512KB
  * @constructor
  */
-bigwig.BigwigFile = function(uri, fwdUri) {
+bigwig.BigwigFile = function(uri, fwdUri, cacheBlockSize) {
   /**
    * @type {bigwig.BigwigReader}
    * @private
    */
-  this._reader = new bigwig.BigwigReader(uri, fwdUri);
+  this._reader = new bigwig.BigwigReader(uri, fwdUri, cacheBlockSize);
 
   /**
    * @type {bigwig.models.Header}

@@ -18,83 +18,6 @@
 */
 
 
-goog.provide('bigwig.DataRecord');
-
-/**
- * @constructor
- */
-bigwig.DataRecord = function() {};
-
-/**
- * @type {number}
- * @name {bigwig.DataRecord#chrName}
- */
-bigwig.DataRecord.prototype.chrName;
-
-/**
- * @type {number}
- * @name {bigwig.DataRecord#chr}
- */
-bigwig.DataRecord.prototype.chr;
-
-/**
- * @type {number}
- * @name {bigwig.DataRecord#start}
- */
-bigwig.DataRecord.prototype.start;
-
-/**
- * @type {number}
- * @name {bigwig.DataRecord#end}
- */
-bigwig.DataRecord.prototype.end;
-
-Object.defineProperties(bigwig.DataRecord.prototype, {
-
-  'chrName': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); }) },
-
-  'chr': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); }) },
-
-  'start': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); })},
-
-  'end': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); })}
-});
-
-/**
- * @enum {number}
- */
-bigwig.DataRecord.Aggregate = {
-  'MIN': 0,
-  'MAX': 1,
-  'SUM': 2,
-  'SUMSQ': 3,
-  'AVG': 4,
-  'NORM': 5,
-  'CNT': 6
-};
-
-/**
- * @param {bigwig.DataRecord.Aggregate} [aggregate]
- */
-bigwig.DataRecord.prototype.value = function(aggregate) {
-  throw new bigwig.BigwigException('Abstract method not implemented');
-};
-
-/**
- * @returns {string}
- */
-bigwig.DataRecord.prototype.toString = function() {
-  return JSON.stringify(this.toJSON());
-};
-
-/**
- * @returns {{chr: string, start: number, end: number, value: number}}
- */
-bigwig.DataRecord.prototype.toJSON = function() {
-  return {'chr': this['chrName'], 'start': this['start'], 'end': this['end'], 'value': this['value']};
-};
-
-
 goog.provide('bigwig.BigwigException');
 
 /**
@@ -235,7 +158,7 @@ bigwig.models.BigwigStruct.sizeOf = function(bigwigType, fields) {
 
 
 
-goog.provide('bigwig.models.SectionHeader');
+goog.provide('bigwig.models.Header');
 
 goog.require('bigwig.models.BigwigStruct');
 
@@ -244,112 +167,134 @@ goog.require('bigwig.models.BigwigStruct');
  * @constructor
  * @extends {bigwig.models.BigwigStruct}
  */
-bigwig.models.SectionHeader = function() {
+bigwig.models.Header = function() {
   bigwig.models.BigwigStruct.apply(this, arguments);
 
   /**
    * @type {number}
-   * @name bigwig.models.SectionHeader#chrId
+   * @name bigwig.models.Header#magic
    */
-  this.chrId;
+  this.magic;
 
   /**
    * @type {number}
-   * @name bigwig.models.SectionHeader#start
+   * @name bigwig.models.Header#version
    */
-  this.start;
+  this.version;
 
   /**
    * @type {number}
-   * @name bigwig.models.SectionHeader#end
+   * @name bigwig.models.Header#zoomLevels
    */
-  this.end;
+  this.zoomLevels;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.Header#chromosomeTreeOffset
+   */
+  this.chromosomeTreeOffset;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.Header#fullDataOffset
+   */
+  this.fullDataOffset;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.Header#fullIndexOffset
+   */
+  this.fullIndexOffset;
 
   /**
    * @type {number}
-   * @name bigwig.models.SectionHeader#itemStep
+   * @name bigwig.models.Header#fieldCount
    */
-  this.itemStep;
+  this.fieldCount;
 
   /**
    * @type {number}
-   * @name bigwig.models.SectionHeader#itemSpan
+   * @name bigwig.models.Header#definedFieldCount
    */
-  this.itemSpan;
+  this.definedFieldCount;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.Header#autoSqlOffset
+   */
+  this.autoSqlOffset;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.Header#totalSummaryOffset
+   */
+  this.totalSummaryOffset;
 
   /**
    * @type {number}
-   * @name bigwig.models.SectionHeader#type
+   * @name bigwig.models.Header#uncompressedBufSize
    */
-  this.type;
+  this.uncompressedBufSize;
 
   /**
-   * @type {number}
-   * @name bigwig.models.SectionHeader#reserved
+   * @type {goog.math.Long}
+   * @name bigwig.models.Header#reserved
    */
   this.reserved;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.SectionHeader#itemCount
-   */
-  this.itemCount;
 };
 
-goog.inherits(bigwig.models.SectionHeader, bigwig.models.BigwigStruct);
+goog.inherits(bigwig.models.Header, bigwig.models.BigwigStruct);
+
+/**
+ * @type {boolean}
+ * @name bigwig.models.Header#bigEndian
+ */
+bigwig.models.Header.prototype.bigEndian;
+
+/**
+ * @type {boolean}
+ * @name bigwig.models.Header#littleEndian
+ */
+bigwig.models.Header.prototype.littleEndian;
+
+Object.defineProperties(bigwig.models.Header.prototype, {
+  bigEndian: { get: /** @type {function (this:bigwig.models.Header)} */ (function() { return this.magic == 0x888FFC26; }) },
+  littleEndian: { get: /** @type {function (this:bigwig.models.Header)} */ (function() { return !this.bigEndian; }) }
+});
 
 /**
  * @type {Object.<string, number>}
  */
-bigwig.models.SectionHeader['Fields'] = {
-  chrId: 4,
-  start: 4,
-  end: 4,
-  itemStep: 4,
-  itemSpan: 4,
-  type: 1,
-  reserved: 1,
-  itemCount: 2
+bigwig.models.Header['Fields'] = {
+  magic: 4,
+  version: 2,
+  zoomLevels: 2,
+  chromosomeTreeOffset: 8,
+  fullDataOffset: 8,
+  fullIndexOffset: 8,
+  fieldCount: 2,
+  definedFieldCount: 2,
+  autoSqlOffset: 8,
+  totalSummaryOffset: 8,
+  uncompressedBufSize: 4,
+  reserved: 8
 };
 
 /**
  * @param {ArrayBuffer} data
- * @param {boolean} [littleEndian]
- * @returns {bigwig.models.SectionHeader}
+ * @returns {bigwig.models.Header}
  */
-bigwig.models.SectionHeader.fromArrayBuffer = function(data, littleEndian) {
-  return /** @type {bigwig.models.SectionHeader} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.SectionHeader, bigwig.models.SectionHeader['Fields'] , data, littleEndian));
+bigwig.models.Header.fromArrayBuffer = function(data) {
+  var view = new DataView(data);
+
+  var magic = view.getUint32(0);
+  var bigEndian = magic == 0x888FFC26;
+
+  var header = /** @type {bigwig.models.Header} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.Header, bigwig.models.Header['Fields'] , data, !bigEndian));
+  header.magic = magic;
+
+  return header;
 };
-
-/**
- * @param {DataView} view
- * @param {boolean} [littleEndian]
- * @returns {bigwig.models.SectionHeader}
- */
-bigwig.models.SectionHeader.fromDataView = function(view, littleEndian) {
-  return /** @type {bigwig.models.SectionHeader} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.SectionHeader, bigwig.models.SectionHeader['Fields'] , view, littleEndian));
-};
-
-
-goog.provide('bigwig.models.Record');
-
-goog.require('bigwig.models.BigwigStruct');
-
-/**
- * @constructor
- * @extends {bigwig.models.BigwigStruct}
- */
-bigwig.models.Record = function() {
-  bigwig.models.BigwigStruct.apply(this, arguments);
-
-  /**
-   * @type {number}
-   * @name bigwig.models.Record#value
-   */
-  this.value;
-};
-
-goog.inherits(bigwig.models.Record, bigwig.models.BigwigStruct);
 
 
 goog.provide('bigwig.Tree');
@@ -491,6 +436,200 @@ bigwig.IndexTree.Node = function(node) {
 goog.inherits(bigwig.IndexTree.Node, bigwig.Tree.Node);
 
 
+goog.provide('bigwig.models.SectionHeader');
+
+goog.require('bigwig.models.BigwigStruct');
+
+
+/**
+ * @constructor
+ * @extends {bigwig.models.BigwigStruct}
+ */
+bigwig.models.SectionHeader = function() {
+  bigwig.models.BigwigStruct.apply(this, arguments);
+
+  /**
+   * @type {number}
+   * @name bigwig.models.SectionHeader#chrId
+   */
+  this.chrId;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.SectionHeader#start
+   */
+  this.start;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.SectionHeader#end
+   */
+  this.end;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.SectionHeader#itemStep
+   */
+  this.itemStep;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.SectionHeader#itemSpan
+   */
+  this.itemSpan;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.SectionHeader#type
+   */
+  this.type;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.SectionHeader#reserved
+   */
+  this.reserved;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.SectionHeader#itemCount
+   */
+  this.itemCount;
+};
+
+goog.inherits(bigwig.models.SectionHeader, bigwig.models.BigwigStruct);
+
+/**
+ * @type {Object.<string, number>}
+ */
+bigwig.models.SectionHeader['Fields'] = {
+  chrId: 4,
+  start: 4,
+  end: 4,
+  itemStep: 4,
+  itemSpan: 4,
+  type: 1,
+  reserved: 1,
+  itemCount: 2
+};
+
+/**
+ * @param {ArrayBuffer} data
+ * @param {boolean} [littleEndian]
+ * @returns {bigwig.models.SectionHeader}
+ */
+bigwig.models.SectionHeader.fromArrayBuffer = function(data, littleEndian) {
+  return /** @type {bigwig.models.SectionHeader} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.SectionHeader, bigwig.models.SectionHeader['Fields'] , data, littleEndian));
+};
+
+/**
+ * @param {DataView} view
+ * @param {boolean} [littleEndian]
+ * @returns {bigwig.models.SectionHeader}
+ */
+bigwig.models.SectionHeader.fromDataView = function(view, littleEndian) {
+  return /** @type {bigwig.models.SectionHeader} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.SectionHeader, bigwig.models.SectionHeader['Fields'] , view, littleEndian));
+};
+
+
+goog.provide('bigwig.models.Record');
+
+goog.require('bigwig.models.BigwigStruct');
+
+/**
+ * @constructor
+ * @extends {bigwig.models.BigwigStruct}
+ */
+bigwig.models.Record = function() {
+  bigwig.models.BigwigStruct.apply(this, arguments);
+
+  /**
+   * @type {number}
+   * @name bigwig.models.Record#value
+   */
+  this.value;
+};
+
+goog.inherits(bigwig.models.Record, bigwig.models.BigwigStruct);
+
+
+goog.provide('bigwig.DataRecord');
+
+/**
+ * @constructor
+ */
+bigwig.DataRecord = function() {};
+
+/**
+ * @type {number}
+ * @name {bigwig.DataRecord#chrName}
+ */
+bigwig.DataRecord.prototype.chrName;
+
+/**
+ * @type {number}
+ * @name {bigwig.DataRecord#chr}
+ */
+bigwig.DataRecord.prototype.chr;
+
+/**
+ * @type {number}
+ * @name {bigwig.DataRecord#start}
+ */
+bigwig.DataRecord.prototype.start;
+
+/**
+ * @type {number}
+ * @name {bigwig.DataRecord#end}
+ */
+bigwig.DataRecord.prototype.end;
+
+Object.defineProperties(bigwig.DataRecord.prototype, {
+
+  'chrName': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); }) },
+
+  'chr': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); }) },
+
+  'start': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); })},
+
+  'end': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); })}
+});
+
+/**
+ * @enum {number}
+ */
+bigwig.DataRecord.Aggregate = {
+  'MIN': 0,
+  'MAX': 1,
+  'SUM': 2,
+  'SUMSQ': 3,
+  'AVG': 4,
+  'NORM': 5,
+  'CNT': 6
+};
+
+/**
+ * @param {bigwig.DataRecord.Aggregate} [aggregate]
+ */
+bigwig.DataRecord.prototype.value = function(aggregate) {
+  throw new bigwig.BigwigException('Abstract method not implemented');
+};
+
+/**
+ * @returns {string}
+ */
+bigwig.DataRecord.prototype.toString = function() {
+  return JSON.stringify(this.toJSON());
+};
+
+/**
+ * @returns {{chr: string, start: number, end: number, value: number}}
+ */
+bigwig.DataRecord.prototype.toJSON = function() {
+  return {'chr': this['chrName'], 'start': this['start'], 'end': this['end'], 'value': this['value']};
+};
+
+
 goog.provide('bigwig.DataRecordImpl');
 
 goog.require('bigwig.DataRecord');
@@ -579,258 +718,6 @@ bigwig.DataRecordImpl.prototype.value = function(aggregate) {
     default:
       return this._record.value;
   }
-};
-
-
-goog.provide('bigwig.ChrTree');
-
-goog.require('bigwig.Tree');
-
-/**
- * @param {bigwig.ChrTree.Node} root
- * @constructor
- * @extends {bigwig.Tree}
- */
-bigwig.ChrTree = function(root) {
-  bigwig.Tree.apply(this, arguments);
-
-  /**
-   * @type {Object.<number, bigwig.ChrTree.Node>}
-   * @private
-   */
-  this._leavesById = null;
-
-  /**
-   * @type {Object.<string, bigwig.ChrTree.Node>}
-   * @private
-   */
-  this._leavesByKey = null;
-};
-
-goog.inherits(bigwig.ChrTree, bigwig.Tree);
-
-/**
- * @param {{key: (string|undefined), chrId: (number|undefined), chrSize: (number|undefined), children: (Array.<bigwig.ChrTree.Node>|undefined)}} node
- * @constructor
- * @extends {bigwig.Tree.Node}
- */
-bigwig.ChrTree.Node = function(node) {
-  bigwig.Tree.Node.apply(this, arguments);
-
-  // Export properties:
-  /**
-   * @type {string|undefined}
-   */
-  this['key'] = node.key;
-
-  /**
-   * @type {number|undefined}
-   */
-  this['chrId'] = node.chrId;
-
-  /**
-   * @type {number|undefined}
-   */
-  this['chrSize'] = node.chrSize;
-};
-
-goog.inherits(bigwig.ChrTree.Node, bigwig.Tree.Node);
-
-/**
- * @param {number|string} chrIdOrKey
- * @returns {bigwig.ChrTree.Node}
- */
-bigwig.ChrTree.prototype.getLeaf = function (chrIdOrKey) {
-  if (typeof chrIdOrKey == 'number') {
-    this._initializeLeavesById();
-    return this._leavesById[chrIdOrKey];
-  }
-
-  // else typeof chrIdOrKey == 'string'
-  this._initializeLeavesByKey();
-  return this._leavesByKey[chrIdOrKey];
-};
-
-/**
- * @type {Array.<bigwig.ChrTree.Node>}
- * @name {bigwig.ChrTree#leaves}
- */
-bigwig.ChrTree.prototype.leaves;
-
-Object.defineProperties(bigwig.ChrTree.prototype, {
-  leaves: { get: /** @type {function (this:bigwig.ChrTree)} */ (function() {
-    this._initializeLeavesByKey();
-    return u.map(this._leavesByKey, function(node) { return node; });
-  })}
-});
-
-/**
- * @private
- */
-bigwig.ChrTree.prototype._initializeLeavesByKey = function() {
-  if (!this._leavesByKey) {
-    var leavesByKey = {};
-    this.dfs(function(node) {
-      if (!node.children) {
-        leavesByKey[node['key']] = node;
-      }
-    });
-    this._leavesByKey = leavesByKey;
-  }
-};
-
-/**
- * @private
- */
-bigwig.ChrTree.prototype._initializeLeavesById = function() {
-  if (!this._leavesById) {
-    var leavesById = {};
-    this.dfs(function (node) {
-      if (!node.children) {
-        leavesById[node['chrId']] = node;
-      }
-    });
-    this._leavesById = leavesById;
-  }
-};
-
-
-goog.provide('bigwig.models.Header');
-
-goog.require('bigwig.models.BigwigStruct');
-
-
-/**
- * @constructor
- * @extends {bigwig.models.BigwigStruct}
- */
-bigwig.models.Header = function() {
-  bigwig.models.BigwigStruct.apply(this, arguments);
-
-  /**
-   * @type {number}
-   * @name bigwig.models.Header#magic
-   */
-  this.magic;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.Header#version
-   */
-  this.version;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.Header#zoomLevels
-   */
-  this.zoomLevels;
-
-  /**
-   * @type {goog.math.Long}
-   * @name bigwig.models.Header#chromosomeTreeOffset
-   */
-  this.chromosomeTreeOffset;
-
-  /**
-   * @type {goog.math.Long}
-   * @name bigwig.models.Header#fullDataOffset
-   */
-  this.fullDataOffset;
-
-  /**
-   * @type {goog.math.Long}
-   * @name bigwig.models.Header#fullIndexOffset
-   */
-  this.fullIndexOffset;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.Header#fieldCount
-   */
-  this.fieldCount;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.Header#definedFieldCount
-   */
-  this.definedFieldCount;
-
-  /**
-   * @type {goog.math.Long}
-   * @name bigwig.models.Header#autoSqlOffset
-   */
-  this.autoSqlOffset;
-
-  /**
-   * @type {goog.math.Long}
-   * @name bigwig.models.Header#totalSummaryOffset
-   */
-  this.totalSummaryOffset;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.Header#uncompressedBufSize
-   */
-  this.uncompressedBufSize;
-
-  /**
-   * @type {goog.math.Long}
-   * @name bigwig.models.Header#reserved
-   */
-  this.reserved;
-};
-
-goog.inherits(bigwig.models.Header, bigwig.models.BigwigStruct);
-
-/**
- * @type {boolean}
- * @name bigwig.models.Header#bigEndian
- */
-bigwig.models.Header.prototype.bigEndian;
-
-/**
- * @type {boolean}
- * @name bigwig.models.Header#littleEndian
- */
-bigwig.models.Header.prototype.littleEndian;
-
-Object.defineProperties(bigwig.models.Header.prototype, {
-  bigEndian: { get: /** @type {function (this:bigwig.models.Header)} */ (function() { return this.magic == 0x888FFC26; }) },
-  littleEndian: { get: /** @type {function (this:bigwig.models.Header)} */ (function() { return !this.bigEndian; }) }
-});
-
-/**
- * @type {Object.<string, number>}
- */
-bigwig.models.Header['Fields'] = {
-  magic: 4,
-  version: 2,
-  zoomLevels: 2,
-  chromosomeTreeOffset: 8,
-  fullDataOffset: 8,
-  fullIndexOffset: 8,
-  fieldCount: 2,
-  definedFieldCount: 2,
-  autoSqlOffset: 8,
-  totalSummaryOffset: 8,
-  uncompressedBufSize: 4,
-  reserved: 8
-};
-
-/**
- * @param {ArrayBuffer} data
- * @returns {bigwig.models.Header}
- */
-bigwig.models.Header.fromArrayBuffer = function(data) {
-  var view = new DataView(data);
-
-  var magic = view.getUint32(0);
-  var bigEndian = magic == 0x888FFC26;
-
-  var header = /** @type {bigwig.models.Header} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.Header, bigwig.models.Header['Fields'] , data, !bigEndian));
-  header.magic = magic;
-
-  return header;
 };
 
 
@@ -1060,193 +947,6 @@ bigwig.models.ZoomHeader.fromArrayBuffer = function(data, littleEndian) {
 };
 
 
-goog.provide('bigwig.models.BedGraphRecord');
-
-goog.require('bigwig.models.Record');
-
-/**
- * @constructor
- * @extends {bigwig.models.Record}
- */
-bigwig.models.BedGraphRecord = function() {
-  bigwig.models.Record.apply(this, arguments);
-
-  /**
-   * @type {number}
-   * @name bigwig.models.BedGraphRecord#chromStart
-   */
-  this.chromStart;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.BedGraphRecord#chromEnd
-   */
-  this.chromEnd;
-};
-
-goog.inherits(bigwig.models.BedGraphRecord, bigwig.models.Record);
-
-/**
- * @type {Object.<string, number>}
- */
-bigwig.models.BedGraphRecord['Fields'] = {
-  chromStart: 4,
-  chromEnd: 4,
-  value: -4
-};
-
-/**
- * @param {ArrayBuffer} data
- * @param {boolean} [littleEndian]
- * @returns {bigwig.models.BedGraphRecord}
- */
-bigwig.models.BedGraphRecord.fromArrayBuffer = function(data, littleEndian) {
-  return /** @type {bigwig.models.BedGraphRecord} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.BedGraphRecord, bigwig.models.BedGraphRecord['Fields'] , data, littleEndian));
-};
-
-/**
- * @param {DataView} view
- * @param {boolean} [littleEndian]
- * @returns {bigwig.models.BedGraphRecord}
- */
-bigwig.models.BedGraphRecord.fromDataView = function(view, littleEndian) {
-  return /** @type {bigwig.models.BedGraphRecord} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.BedGraphRecord, bigwig.models.BedGraphRecord['Fields'] , view, littleEndian));
-};
-
-
-
-
-
-goog.provide('bigwig.models.RTreeNodeLeaf');
-
-goog.require('bigwig.models.BigwigStruct');
-
-
-/**
- * @constructor
- * @extends {bigwig.models.BigwigStruct}
- */
-bigwig.models.RTreeNodeLeaf = function() {
-  bigwig.models.BigwigStruct.apply(this, arguments);
-
-  /**
-   * @type {number}
-   * @name bigwig.models.RTreeNodeLeaf#startChromIx
-   */
-  this.startChromIx;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.RTreeNodeLeaf#startBase
-   */
-  this.startBase;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.RTreeNodeLeaf#endChromIx
-   */
-  this.endChromIx;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.RTreeNodeLeaf#endBase
-   */
-  this.endBase;
-
-  /**
-   * @type {goog.math.Long}
-   * @name bigwig.models.RTreeNodeLeaf#dataOffset
-   */
-  this.dataOffset;
-
-  /**
-   * @type {goog.math.Long}
-   * @name bigwig.models.RTreeNodeLeaf#dataSize
-   */
-  this.dataSize;
-};
-
-goog.inherits(bigwig.models.RTreeNodeLeaf, bigwig.models.BigwigStruct);
-
-/**
- * @type {Object.<string, number>}
- */
-bigwig.models.RTreeNodeLeaf['Fields'] = {
-  startChromIx: 4,
-  startBase: 4,
-  endChromIx: 4,
-  endBase: 4,
-  dataOffset: 8,
-  dataSize: 8
-};
-
-/**
- * @param {ArrayBuffer} data
- * @param {boolean} [littleEndian]
- * @returns {bigwig.models.RTreeNodeLeaf}
- */
-bigwig.models.RTreeNodeLeaf.fromArrayBuffer = function(data, littleEndian) {
-  return /** @type {bigwig.models.RTreeNodeLeaf} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.RTreeNodeLeaf, bigwig.models.RTreeNodeLeaf['Fields'] , data, littleEndian));
-};
-
-/**
- * @param {DataView} view
- * @param {boolean} [littleEndian]
- * @returns {bigwig.models.RTreeNodeLeaf}
- */
-bigwig.models.RTreeNodeLeaf.fromDataView = function(view, littleEndian) {
-  return /** @type {bigwig.models.RTreeNodeLeaf} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.RTreeNodeLeaf, bigwig.models.RTreeNodeLeaf['Fields'] , view, littleEndian));
-};
-
-
-goog.provide('bigwig.models.ChrTreeNodeItem');
-
-goog.require('bigwig.models.BigwigStruct');
-
-
-/**
- * @constructor
- * @extends {bigwig.models.BigwigStruct}
- */
-bigwig.models.ChrTreeNodeItem = function() {
-  bigwig.models.BigwigStruct.apply(this, arguments);
-
-  /**
-   * @type {string}
-   * @name bigwig.models.ChrTreeNodeItem#key
-   */
-  this.key;
-
-  /**
-   * @type {goog.math.Long}
-   * @name bigwig.models.ChrTreeNodeItem#childOffset
-   */
-  this.childOffset;
-};
-
-goog.inherits(bigwig.models.ChrTreeNodeItem, bigwig.models.BigwigStruct);
-
-/**
- * @param {ArrayBuffer} data
- * @param {number} keySize
- * @param {boolean} [littleEndian]
- * @returns {bigwig.models.ChrTreeNodeItem}
- */
-bigwig.models.ChrTreeNodeItem.fromArrayBuffer = function(data, keySize, littleEndian) {
-  return /** @type {bigwig.models.ChrTreeNodeItem} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.ChrTreeNodeItem, {key: keySize, childOffset: 8}, data, littleEndian));
-};
-
-/**
- * @param {DataView} view
- * @param {number} keySize
- * @param {boolean} [littleEndian]
- * @returns {bigwig.models.ChrTreeNodeItem}
- */
-bigwig.models.ChrTreeNodeItem.fromDataView = function(view, keySize, littleEndian) {
-  return /** @type {bigwig.models.ChrTreeNodeItem} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.ChrTreeNodeItem, {key: keySize, childOffset: 8}, view, littleEndian));
-};
-
-
 goog.provide('bigwig.models.ChrTreeNode');
 
 goog.require('bigwig.models.BigwigStruct');
@@ -1307,168 +1007,6 @@ bigwig.models.ChrTreeNode.fromDataView = function(view, littleEndian) {
 };
 
 
-goog.provide('bigwig.models.RTreeHeader');
-
-goog.require('bigwig.models.BigwigStruct');
-
-/**
- * @constructor
- * @extends {bigwig.models.BigwigStruct}
- */
-bigwig.models.RTreeHeader = function() {
-  bigwig.models.BigwigStruct.apply(this, arguments);
-
-  /**
-   * @type {number}
-   * @name bigwig.models.RTreeHeader#magic
-   */
-  this.magic;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.RTreeHeader#blockSize
-   */
-  this.blockSize;
-
-  /**
-   * @type {goog.math.Long}
-   * @name bigwig.models.RTreeHeader#itemCount
-   */
-  this.itemCount;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.RTreeHeader#startChromIx
-   */
-  this.startChromIx;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.RTreeHeader#startBase
-   */
-  this.startBase;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.RTreeHeader#endChromIx
-   */
-  this.endChromIx;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.RTreeHeader#endBase
-   */
-  this.endBase;
-
-  /**
-   * @type {goog.math.Long}
-   * @name bigwig.models.RTreeHeader#endFileOffset
-   */
-  this.endFileOffset;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.RTreeHeader#itemsPerSlot
-   */
-  this.itemsPerSlot;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.RTreeHeader#reserved
-   */
-  this.reserved;
-};
-
-goog.inherits(bigwig.models.RTreeHeader, bigwig.models.BigwigStruct);
-
-/**
- * @type {Object.<string, number>}
- */
-bigwig.models.RTreeHeader['Fields'] = {
-  magic: 4,
-  blockSize: 4,
-  itemCount: 8,
-  startChromIx: 4, 
-  startBase: 4,
-  endChromIx: 4,
-  endBase: 4,
-  endFileOffset: 8,
-  itemsPerSlot: 4,
-  reserved: 4
-};
-
-/**
- * @param {ArrayBuffer} data
- * @param {boolean} [littleEndian]
- * @returns {bigwig.models.RTreeHeader}
- */
-bigwig.models.RTreeHeader.fromArrayBuffer = function(data, littleEndian) {
-  return /** @type {bigwig.models.RTreeHeader} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.RTreeHeader, bigwig.models.RTreeHeader['Fields'] , data, littleEndian));
-};
-
-
-
-goog.provide('bigwig.models.RTreeNode');
-
-goog.require('bigwig.models.BigwigStruct');
-
-/**
- * @constructor
- * @extends {bigwig.models.BigwigStruct}
- */
-bigwig.models.RTreeNode = function() {
-  bigwig.models.BigwigStruct.apply(this, arguments);
-
-  /**
-   * @type {number}
-   * @name bigwig.models.RTreeNode#isLeaf
-   */
-  this.isLeaf;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.RTreeNode#reserved
-   */
-  this.reserved;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.RTreeNode#count
-   */
-  this.count;
-};
-
-goog.inherits(bigwig.models.RTreeNode, bigwig.models.BigwigStruct);
-
-/**
- * @type {Object.<string, number>}
- */
-bigwig.models.RTreeNode['Fields'] = {
-  isLeaf: 1,
-  reserved: 1,
-  count: 2
-};
-
-/**
- * @param {ArrayBuffer} data
- * @param {boolean} [littleEndian]
- * @returns {bigwig.models.RTreeNode}
- */
-bigwig.models.RTreeNode.fromArrayBuffer = function(data, littleEndian) {
-  return /** @type {bigwig.models.RTreeNode} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.RTreeNode, bigwig.models.RTreeNode['Fields'] , data, littleEndian));
-};
-
-/**
- * @param {DataView} view
- * @param {boolean} [littleEndian]
- * @returns {bigwig.models.RTreeNode}
- */
-bigwig.models.RTreeNode.fromDataView = function(view, littleEndian) {
-  return /** @type {bigwig.models.RTreeNode} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.RTreeNode, bigwig.models.RTreeNode['Fields'] , view, littleEndian));
-};
-
-
-
 goog.provide('bigwig.models.VariableStepRecord');
 
 goog.require('bigwig.models.Record');
@@ -1517,133 +1055,6 @@ bigwig.models.VariableStepRecord.fromDataView = function(view, littleEndian) {
 
 
 
-
-
-goog.provide('bigwig.models.ChrTreeHeader');
-
-goog.require('bigwig.models.BigwigStruct');
-
-/**
- * @constructor
- * @extends {bigwig.models.BigwigStruct}
- */
-bigwig.models.ChrTreeHeader = function() {
-  bigwig.models.BigwigStruct.apply(this, arguments);
-
-  /**
-   * @type {number}
-   * @name bigwig.models.ChrTreeHeader#magic
-   */
-  this.magic;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.ChrTreeHeader#blockSize
-   */
-  this.blockSize;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.ChrTreeHeader#keySize
-   */
-  this.keySize;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.ChrTreeHeader#valSize
-   */
-  this.valSize;
-
-  /**
-   * @type {goog.math.Long}
-   * @name bigwig.models.ChrTreeHeader#itemCount
-   */
-  this.itemCount;
-
-  /**
-   * @type {goog.math.Long}
-   * @name bigwig.models.ChrTreeHeader#reserved
-   */
-  this.reserved;
-};
-
-goog.inherits(bigwig.models.ChrTreeHeader, bigwig.models.BigwigStruct);
-
-/**
- * @type {Object.<string, number>}
- */
-bigwig.models.ChrTreeHeader['Fields'] = {
-  magic: 4,
-  blockSize: 4,
-  keySize: 4,
-  valSize: 4,
-  itemCount: 8,
-  reserved: 8
-};
-
-/**
- * @param {ArrayBuffer} data
- * @param {boolean} [littleEndian]
- * @returns {bigwig.models.ChrTreeHeader}
- */
-bigwig.models.ChrTreeHeader.fromArrayBuffer = function(data, littleEndian) {
-  return /** @type {bigwig.models.ChrTreeHeader} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.ChrTreeHeader, bigwig.models.ChrTreeHeader['Fields'] , data, littleEndian));
-};
-
-
-
-goog.provide('bigwig.models.ChrTreeNodeLeaf');
-
-goog.require('bigwig.models.BigwigStruct');
-
-
-/**
- * @constructor
- * @extends {bigwig.models.BigwigStruct}
- */
-bigwig.models.ChrTreeNodeLeaf = function() {
-  bigwig.models.BigwigStruct.apply(this, arguments);
-
-  /**
-   * @type {string}
-   * @name bigwig.models.ChrTreeNodeLeaf#key
-   */
-  this.key;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.ChrTreeNodeLeaf#chrId
-   */
-  this.chrId;
-
-  /**
-   * @type {number}
-   * @name bigwig.models.ChrTreeNodeLeaf#chrSize
-   */
-  this.chrSize;
-};
-
-goog.inherits(bigwig.models.ChrTreeNodeLeaf, bigwig.models.BigwigStruct);
-
-/**
- * @param {ArrayBuffer} data
- * @param {number} keySize
- * @param {boolean} [littleEndian]
- * @returns {bigwig.models.ChrTreeNodeLeaf}
- */
-bigwig.models.ChrTreeNodeLeaf.fromArrayBuffer = function(data, keySize, littleEndian) {
-  return /** @type {bigwig.models.ChrTreeNodeLeaf} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.ChrTreeNodeLeaf, {key: keySize, chrId: 4, chrSize: 4}, data, littleEndian));
-};
-
-/**
- * @param {DataView} view
- * @param {number} keySize
- * @param {boolean} [littleEndian]
- * @returns {bigwig.models.ChrTreeNodeLeaf}
- */
-bigwig.models.ChrTreeNodeLeaf.fromDataView = function(view, keySize, littleEndian) {
-  return /** @type {bigwig.models.ChrTreeNodeLeaf} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.ChrTreeNodeLeaf, {key: keySize, chrId: 4, chrSize: 4}, view, littleEndian));
-};
 
 
 goog.provide('bigwig.models.RTreeNodeItem');
@@ -1786,6 +1197,164 @@ bigwig.models.TotalSummary.fromArrayBuffer = function(data, littleEndian) {
 };
 
 
+goog.provide('bigwig.models.RTreeHeader');
+
+goog.require('bigwig.models.BigwigStruct');
+
+/**
+ * @constructor
+ * @extends {bigwig.models.BigwigStruct}
+ */
+bigwig.models.RTreeHeader = function() {
+  bigwig.models.BigwigStruct.apply(this, arguments);
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeHeader#magic
+   */
+  this.magic;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeHeader#blockSize
+   */
+  this.blockSize;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.RTreeHeader#itemCount
+   */
+  this.itemCount;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeHeader#startChromIx
+   */
+  this.startChromIx;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeHeader#startBase
+   */
+  this.startBase;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeHeader#endChromIx
+   */
+  this.endChromIx;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeHeader#endBase
+   */
+  this.endBase;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.RTreeHeader#endFileOffset
+   */
+  this.endFileOffset;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeHeader#itemsPerSlot
+   */
+  this.itemsPerSlot;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeHeader#reserved
+   */
+  this.reserved;
+};
+
+goog.inherits(bigwig.models.RTreeHeader, bigwig.models.BigwigStruct);
+
+/**
+ * @type {Object.<string, number>}
+ */
+bigwig.models.RTreeHeader['Fields'] = {
+  magic: 4,
+  blockSize: 4,
+  itemCount: 8,
+  startChromIx: 4, 
+  startBase: 4,
+  endChromIx: 4,
+  endBase: 4,
+  endFileOffset: 8,
+  itemsPerSlot: 4,
+  reserved: 4
+};
+
+/**
+ * @param {ArrayBuffer} data
+ * @param {boolean} [littleEndian]
+ * @returns {bigwig.models.RTreeHeader}
+ */
+bigwig.models.RTreeHeader.fromArrayBuffer = function(data, littleEndian) {
+  return /** @type {bigwig.models.RTreeHeader} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.RTreeHeader, bigwig.models.RTreeHeader['Fields'] , data, littleEndian));
+};
+
+
+
+goog.provide('bigwig.models.BedGraphRecord');
+
+goog.require('bigwig.models.Record');
+
+/**
+ * @constructor
+ * @extends {bigwig.models.Record}
+ */
+bigwig.models.BedGraphRecord = function() {
+  bigwig.models.Record.apply(this, arguments);
+
+  /**
+   * @type {number}
+   * @name bigwig.models.BedGraphRecord#chromStart
+   */
+  this.chromStart;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.BedGraphRecord#chromEnd
+   */
+  this.chromEnd;
+};
+
+goog.inherits(bigwig.models.BedGraphRecord, bigwig.models.Record);
+
+/**
+ * @type {Object.<string, number>}
+ */
+bigwig.models.BedGraphRecord['Fields'] = {
+  chromStart: 4,
+  chromEnd: 4,
+  value: -4
+};
+
+/**
+ * @param {ArrayBuffer} data
+ * @param {boolean} [littleEndian]
+ * @returns {bigwig.models.BedGraphRecord}
+ */
+bigwig.models.BedGraphRecord.fromArrayBuffer = function(data, littleEndian) {
+  return /** @type {bigwig.models.BedGraphRecord} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.BedGraphRecord, bigwig.models.BedGraphRecord['Fields'] , data, littleEndian));
+};
+
+/**
+ * @param {DataView} view
+ * @param {boolean} [littleEndian]
+ * @returns {bigwig.models.BedGraphRecord}
+ */
+bigwig.models.BedGraphRecord.fromDataView = function(view, littleEndian) {
+  return /** @type {bigwig.models.BedGraphRecord} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.BedGraphRecord, bigwig.models.BedGraphRecord['Fields'] , view, littleEndian));
+};
+
+
+
+
+
 goog.provide('bigwig.models.FixedStepRecord');
 
 goog.require('bigwig.models.Record');
@@ -1829,6 +1398,437 @@ bigwig.models.FixedStepRecord.fromDataView = function(view, littleEndian) {
 
 
 
+goog.provide('bigwig.models.ChrTreeHeader');
+
+goog.require('bigwig.models.BigwigStruct');
+
+/**
+ * @constructor
+ * @extends {bigwig.models.BigwigStruct}
+ */
+bigwig.models.ChrTreeHeader = function() {
+  bigwig.models.BigwigStruct.apply(this, arguments);
+
+  /**
+   * @type {number}
+   * @name bigwig.models.ChrTreeHeader#magic
+   */
+  this.magic;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.ChrTreeHeader#blockSize
+   */
+  this.blockSize;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.ChrTreeHeader#keySize
+   */
+  this.keySize;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.ChrTreeHeader#valSize
+   */
+  this.valSize;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.ChrTreeHeader#itemCount
+   */
+  this.itemCount;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.ChrTreeHeader#reserved
+   */
+  this.reserved;
+};
+
+goog.inherits(bigwig.models.ChrTreeHeader, bigwig.models.BigwigStruct);
+
+/**
+ * @type {Object.<string, number>}
+ */
+bigwig.models.ChrTreeHeader['Fields'] = {
+  magic: 4,
+  blockSize: 4,
+  keySize: 4,
+  valSize: 4,
+  itemCount: 8,
+  reserved: 8
+};
+
+/**
+ * @param {ArrayBuffer} data
+ * @param {boolean} [littleEndian]
+ * @returns {bigwig.models.ChrTreeHeader}
+ */
+bigwig.models.ChrTreeHeader.fromArrayBuffer = function(data, littleEndian) {
+  return /** @type {bigwig.models.ChrTreeHeader} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.ChrTreeHeader, bigwig.models.ChrTreeHeader['Fields'] , data, littleEndian));
+};
+
+
+
+goog.provide('bigwig.models.ChrTreeNodeItem');
+
+goog.require('bigwig.models.BigwigStruct');
+
+
+/**
+ * @constructor
+ * @extends {bigwig.models.BigwigStruct}
+ */
+bigwig.models.ChrTreeNodeItem = function() {
+  bigwig.models.BigwigStruct.apply(this, arguments);
+
+  /**
+   * @type {string}
+   * @name bigwig.models.ChrTreeNodeItem#key
+   */
+  this.key;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.ChrTreeNodeItem#childOffset
+   */
+  this.childOffset;
+};
+
+goog.inherits(bigwig.models.ChrTreeNodeItem, bigwig.models.BigwigStruct);
+
+/**
+ * @param {ArrayBuffer} data
+ * @param {number} keySize
+ * @param {boolean} [littleEndian]
+ * @returns {bigwig.models.ChrTreeNodeItem}
+ */
+bigwig.models.ChrTreeNodeItem.fromArrayBuffer = function(data, keySize, littleEndian) {
+  return /** @type {bigwig.models.ChrTreeNodeItem} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.ChrTreeNodeItem, {key: keySize, childOffset: 8}, data, littleEndian));
+};
+
+/**
+ * @param {DataView} view
+ * @param {number} keySize
+ * @param {boolean} [littleEndian]
+ * @returns {bigwig.models.ChrTreeNodeItem}
+ */
+bigwig.models.ChrTreeNodeItem.fromDataView = function(view, keySize, littleEndian) {
+  return /** @type {bigwig.models.ChrTreeNodeItem} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.ChrTreeNodeItem, {key: keySize, childOffset: 8}, view, littleEndian));
+};
+
+
+goog.provide('bigwig.models.ChrTreeNodeLeaf');
+
+goog.require('bigwig.models.BigwigStruct');
+
+
+/**
+ * @constructor
+ * @extends {bigwig.models.BigwigStruct}
+ */
+bigwig.models.ChrTreeNodeLeaf = function() {
+  bigwig.models.BigwigStruct.apply(this, arguments);
+
+  /**
+   * @type {string}
+   * @name bigwig.models.ChrTreeNodeLeaf#key
+   */
+  this.key;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.ChrTreeNodeLeaf#chrId
+   */
+  this.chrId;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.ChrTreeNodeLeaf#chrSize
+   */
+  this.chrSize;
+};
+
+goog.inherits(bigwig.models.ChrTreeNodeLeaf, bigwig.models.BigwigStruct);
+
+/**
+ * @param {ArrayBuffer} data
+ * @param {number} keySize
+ * @param {boolean} [littleEndian]
+ * @returns {bigwig.models.ChrTreeNodeLeaf}
+ */
+bigwig.models.ChrTreeNodeLeaf.fromArrayBuffer = function(data, keySize, littleEndian) {
+  return /** @type {bigwig.models.ChrTreeNodeLeaf} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.ChrTreeNodeLeaf, {key: keySize, chrId: 4, chrSize: 4}, data, littleEndian));
+};
+
+/**
+ * @param {DataView} view
+ * @param {number} keySize
+ * @param {boolean} [littleEndian]
+ * @returns {bigwig.models.ChrTreeNodeLeaf}
+ */
+bigwig.models.ChrTreeNodeLeaf.fromDataView = function(view, keySize, littleEndian) {
+  return /** @type {bigwig.models.ChrTreeNodeLeaf} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.ChrTreeNodeLeaf, {key: keySize, chrId: 4, chrSize: 4}, view, littleEndian));
+};
+
+
+goog.provide('bigwig.models.RTreeNode');
+
+goog.require('bigwig.models.BigwigStruct');
+
+/**
+ * @constructor
+ * @extends {bigwig.models.BigwigStruct}
+ */
+bigwig.models.RTreeNode = function() {
+  bigwig.models.BigwigStruct.apply(this, arguments);
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNode#isLeaf
+   */
+  this.isLeaf;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNode#reserved
+   */
+  this.reserved;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNode#count
+   */
+  this.count;
+};
+
+goog.inherits(bigwig.models.RTreeNode, bigwig.models.BigwigStruct);
+
+/**
+ * @type {Object.<string, number>}
+ */
+bigwig.models.RTreeNode['Fields'] = {
+  isLeaf: 1,
+  reserved: 1,
+  count: 2
+};
+
+/**
+ * @param {ArrayBuffer} data
+ * @param {boolean} [littleEndian]
+ * @returns {bigwig.models.RTreeNode}
+ */
+bigwig.models.RTreeNode.fromArrayBuffer = function(data, littleEndian) {
+  return /** @type {bigwig.models.RTreeNode} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.RTreeNode, bigwig.models.RTreeNode['Fields'] , data, littleEndian));
+};
+
+/**
+ * @param {DataView} view
+ * @param {boolean} [littleEndian]
+ * @returns {bigwig.models.RTreeNode}
+ */
+bigwig.models.RTreeNode.fromDataView = function(view, littleEndian) {
+  return /** @type {bigwig.models.RTreeNode} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.RTreeNode, bigwig.models.RTreeNode['Fields'] , view, littleEndian));
+};
+
+
+
+goog.provide('bigwig.models.RTreeNodeLeaf');
+
+goog.require('bigwig.models.BigwigStruct');
+
+
+/**
+ * @constructor
+ * @extends {bigwig.models.BigwigStruct}
+ */
+bigwig.models.RTreeNodeLeaf = function() {
+  bigwig.models.BigwigStruct.apply(this, arguments);
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNodeLeaf#startChromIx
+   */
+  this.startChromIx;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNodeLeaf#startBase
+   */
+  this.startBase;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNodeLeaf#endChromIx
+   */
+  this.endChromIx;
+
+  /**
+   * @type {number}
+   * @name bigwig.models.RTreeNodeLeaf#endBase
+   */
+  this.endBase;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.RTreeNodeLeaf#dataOffset
+   */
+  this.dataOffset;
+
+  /**
+   * @type {goog.math.Long}
+   * @name bigwig.models.RTreeNodeLeaf#dataSize
+   */
+  this.dataSize;
+};
+
+goog.inherits(bigwig.models.RTreeNodeLeaf, bigwig.models.BigwigStruct);
+
+/**
+ * @type {Object.<string, number>}
+ */
+bigwig.models.RTreeNodeLeaf['Fields'] = {
+  startChromIx: 4,
+  startBase: 4,
+  endChromIx: 4,
+  endBase: 4,
+  dataOffset: 8,
+  dataSize: 8
+};
+
+/**
+ * @param {ArrayBuffer} data
+ * @param {boolean} [littleEndian]
+ * @returns {bigwig.models.RTreeNodeLeaf}
+ */
+bigwig.models.RTreeNodeLeaf.fromArrayBuffer = function(data, littleEndian) {
+  return /** @type {bigwig.models.RTreeNodeLeaf} */ (bigwig.models.BigwigStruct.fromArrayBuffer(bigwig.models.RTreeNodeLeaf, bigwig.models.RTreeNodeLeaf['Fields'] , data, littleEndian));
+};
+
+/**
+ * @param {DataView} view
+ * @param {boolean} [littleEndian]
+ * @returns {bigwig.models.RTreeNodeLeaf}
+ */
+bigwig.models.RTreeNodeLeaf.fromDataView = function(view, littleEndian) {
+  return /** @type {bigwig.models.RTreeNodeLeaf} */ (bigwig.models.BigwigStruct.fromDataView(bigwig.models.RTreeNodeLeaf, bigwig.models.RTreeNodeLeaf['Fields'] , view, littleEndian));
+};
+
+
+goog.provide('bigwig.ChrTree');
+
+goog.require('bigwig.Tree');
+
+/**
+ * @param {bigwig.ChrTree.Node} root
+ * @constructor
+ * @extends {bigwig.Tree}
+ */
+bigwig.ChrTree = function(root) {
+  bigwig.Tree.apply(this, arguments);
+
+  /**
+   * @type {Object.<number, bigwig.ChrTree.Node>}
+   * @private
+   */
+  this._leavesById = null;
+
+  /**
+   * @type {Object.<string, bigwig.ChrTree.Node>}
+   * @private
+   */
+  this._leavesByKey = null;
+};
+
+goog.inherits(bigwig.ChrTree, bigwig.Tree);
+
+/**
+ * @param {{key: (string|undefined), chrId: (number|undefined), chrSize: (number|undefined), children: (Array.<bigwig.ChrTree.Node>|undefined)}} node
+ * @constructor
+ * @extends {bigwig.Tree.Node}
+ */
+bigwig.ChrTree.Node = function(node) {
+  bigwig.Tree.Node.apply(this, arguments);
+
+  // Export properties:
+  /**
+   * @type {string|undefined}
+   */
+  this['key'] = node.key;
+
+  /**
+   * @type {number|undefined}
+   */
+  this['chrId'] = node.chrId;
+
+  /**
+   * @type {number|undefined}
+   */
+  this['chrSize'] = node.chrSize;
+};
+
+goog.inherits(bigwig.ChrTree.Node, bigwig.Tree.Node);
+
+/**
+ * @param {number|string} chrIdOrKey
+ * @returns {bigwig.ChrTree.Node}
+ */
+bigwig.ChrTree.prototype.getLeaf = function (chrIdOrKey) {
+  if (typeof chrIdOrKey == 'number') {
+    this._initializeLeavesById();
+    return this._leavesById[chrIdOrKey];
+  }
+
+  // else typeof chrIdOrKey == 'string'
+  this._initializeLeavesByKey();
+  return this._leavesByKey[chrIdOrKey];
+};
+
+/**
+ * @type {Array.<bigwig.ChrTree.Node>}
+ * @name {bigwig.ChrTree#leaves}
+ */
+bigwig.ChrTree.prototype.leaves;
+
+Object.defineProperties(bigwig.ChrTree.prototype, {
+  leaves: { get: /** @type {function (this:bigwig.ChrTree)} */ (function() {
+    this._initializeLeavesByKey();
+    return u.map(this._leavesByKey, function(node) { return node; });
+  })}
+});
+
+/**
+ * @private
+ */
+bigwig.ChrTree.prototype._initializeLeavesByKey = function() {
+  if (!this._leavesByKey) {
+    var leavesByKey = {};
+    this.dfs(function(node) {
+      if (!node.children) {
+        leavesByKey[node['key']] = node;
+      }
+    });
+    this._leavesByKey = leavesByKey;
+  }
+};
+
+/**
+ * @private
+ */
+bigwig.ChrTree.prototype._initializeLeavesById = function() {
+  if (!this._leavesById) {
+    var leavesById = {};
+    this.dfs(function (node) {
+      if (!node.children) {
+        leavesById[node['chrId']] = node;
+      }
+    });
+    this._leavesById = leavesById;
+  }
+};
+
+
 goog.provide('bigwig.BigwigReader');
 
 goog.require('goog.math.Long');
@@ -1857,9 +1857,10 @@ goog.require('bigwig.ChrTree');
 /**
  * @param {string} uri
  * @param {string} [fwdUri]
+ * @param {number} [cacheSize] Default is 512KB
  * @constructor
  */
-bigwig.BigwigReader = function(uri, fwdUri) {
+bigwig.BigwigReader = function(uri, fwdUri, cacheSize) {
   /**
    * @type {string}
    * @private
@@ -1871,9 +1872,50 @@ bigwig.BigwigReader = function(uri, fwdUri) {
    * @private
    */
   this._fwdUri = fwdUri || null;
+
+  /**
+   * @type {goog.math.Long}
+   * @private
+   */
+  this._fileSize = null;
+
+  var self = this;
+
+  /**
+   * @type {Promise}
+   * @private
+   */
+  this._fileSizePromise = new Promise(function(resolve, reject) {
+    if (self._fileSize != undefined) { resolve(self._fileSize); return; }
+    self.get(0, 1, function(response, xhr) {
+      var rangeHeader = xhr.getResponseHeader('Content-Range');
+      self._fileSize = goog.math.Long.fromString(rangeHeader.substr(rangeHeader.indexOf('/') + 1));
+      resolve(self._fileSize);
+    });
+  });
+
+  /**
+   * @type {number}
+   * @private
+   */
+  this._cacheSize = (cacheSize && cacheSize > 0) ? cacheSize * 1024 : bigwig.BigwigReader.CACHE_BLOCK_SIZE;
+
+  /**
+   * @type {Function}
+   * @private
+   */
+  this._get = (cacheSize === 0) ? this.get : this.getCached;
+
+  /**
+   * @type {Object.<string, Promise>}
+   * @private
+   */
+  this._cache = {};
 };
 
 bigwig.BigwigReader.N_RETRIES = 10;
+
+bigwig.BigwigReader.CACHE_BLOCK_SIZE = 1024 * 512;
 
 /**
  * @const {number}
@@ -1942,7 +1984,7 @@ bigwig.BigwigReader.RECORD_TYPES = {
 /**
  * @param {number|goog.math.Long} start
  * @param {number|goog.math.Long} end
- * @param {function(*)} callback
+ * @param {function(ArrayBuffer, XMLHttpRequest)} callback
  */
 bigwig.BigwigReader.prototype.get = function(start, end, callback) {
   var self = this;
@@ -1950,12 +1992,15 @@ bigwig.BigwigReader.prototype.get = function(start, end, callback) {
   var s = /** @type {string|number} */ ((start instanceof goog.math.Long) ? start.toString() : start);
   var e = /** @type {string|number} */ ((end instanceof goog.math.Long) ? end.subtract(goog.math.Long.fromInt(1)).toString() : end - 1);
   var uri = this._fwdUri ? goog.string.format('%s?r=%s-%s&q=%s', this._fwdUri, s, e, this._uri)  : this._uri;
+
   var retry = function() {
     var req = new XMLHttpRequest();
     req.open('GET', uri, true);
     if (!self._fwdUri) { req.setRequestHeader('Range', goog.string.format('bytes=%s-%s', s, e)); }
     req.responseType = 'arraybuffer';
-    req.onload = callback;
+    req.onload = function(e) {
+      callback(e.target.response, e.target);
+    };
     req.onreadystatechange = function () {
       if (req.readyState === 4) {
         if (req.status === 200 || req.status == 206) {
@@ -1976,14 +2021,66 @@ bigwig.BigwigReader.prototype.get = function(start, end, callback) {
   retry();
 };
 
+bigwig.BigwigReader.prototype.getFileSize = function() {
+  return this._fileSizePromise;
+};
+
+/**
+ * @param {number|goog.math.Long} start
+ * @param {number|goog.math.Long} end
+ * @param {function(ArrayBuffer)} callback
+ */
+bigwig.BigwigReader.prototype.getCached = function(start, end, callback) {
+  var self = this;
+
+  if (self._fileSize == undefined) {
+    self.getFileSize()
+      .then(function() {
+        self.getCached(start, end, callback);
+      });
+    return;
+  }
+
+  var lStart = (start instanceof goog.math.Long) ? start : goog.math.Long.fromNumber(/** @type {number} */(start));
+  var lEnd = (end instanceof goog.math.Long) ? end : goog.math.Long.fromNumber(/** @type {number} */(end));
+
+  var blockSize = goog.math.Long.fromNumber(this._cacheSize);
+  var startBl = lStart.div(blockSize);
+  var endBl = lEnd.div(blockSize);
+  var s = startBl.multiply(blockSize);
+  var e = s.add(blockSize);
+  if (!startBl.equals(endBl)) {
+    self.get(start, end, callback);
+    return;
+  }
+
+  var b = startBl.toString();
+  var promise = this._cache[b];
+  if (!promise) {
+    promise = new Promise(function(resolve, reject) {
+      if (e.greaterThan(self._fileSize)) {
+        e = self._fileSize;
+      }
+      self.get(s, e, function(buf) {
+        resolve(buf);
+      });
+    });
+    this._cache[b] = promise;
+  }
+  promise.then(function(buf) {
+    var begin = lStart.subtract(s).toNumber();
+    var end = lEnd.subtract(s).toNumber();
+    callback(buf.slice(begin, end));
+  });
+};
+
 /**
  * @returns {Promise} Promise.<bigwig.models.Header>
  */
 bigwig.BigwigReader.prototype.readHeader = function() {
   var self = this;
   return new Promise(function(resolve, reject) {
-    self.get(0, bigwig.BigwigReader.HEADER_SIZE, function(e) {
-      var buf = e.target.response;
+    self._get(0, bigwig.BigwigReader.HEADER_SIZE, function(buf) {
       var header = bigwig.models.Header.fromArrayBuffer(buf);
       resolve(header);
     });
@@ -2001,8 +2098,7 @@ bigwig.BigwigReader.prototype.readZoomHeader = function(header, index) {
   return new Promise(function(resolve, reject) {
     var offset = bigwig.BigwigReader.HEADER_SIZE;
     var zoomHeaderSize = bigwig.BigwigReader.ZOOM_HEADER_SIZE;
-    self.get(offset + index * zoomHeaderSize, offset + (index + 1) * zoomHeaderSize, function(e) {
-      var buf = e.target.response;
+    self._get(offset + index * zoomHeaderSize, offset + (index + 1) * zoomHeaderSize, function(buf) {
       var ret = bigwig.models.ZoomHeader.fromArrayBuffer(buf, header.littleEndian);
       resolve(ret);
     });
@@ -2037,8 +2133,7 @@ bigwig.BigwigReader.prototype.readTotalSummary = function(header) {
     var offset =
       bigwig.BigwigReader.HEADER_SIZE +
       bigwig.BigwigReader.ZOOM_HEADER_SIZE * header.zoomLevels;
-    self.get(offset, offset + bigwig.BigwigReader.TOTAL_SUMMARY_SIZE, function(e) {
-      var buf = e.target.response;
+    self._get(offset, offset + bigwig.BigwigReader.TOTAL_SUMMARY_SIZE, function(buf) {
       var ret = bigwig.models.TotalSummary.fromArrayBuffer(buf, header.littleEndian);
       resolve(ret);
     });
@@ -2054,8 +2149,7 @@ bigwig.BigwigReader.prototype.readChrTreeHeader = function(header) {
   return new Promise(function(resolve, reject) {
     /** @type {goog.math.Long} */
     var offset = header.chromosomeTreeOffset;
-    self.get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.CHR_TREE_HEADER_SIZE)), function(e) {
-      var buf = e.target.response;
+    self._get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.CHR_TREE_HEADER_SIZE)), function(buf) {
       var ret = bigwig.models.ChrTreeHeader.fromArrayBuffer(buf, header.littleEndian);
       resolve(ret);
     });
@@ -2070,8 +2164,7 @@ bigwig.BigwigReader.prototype.readChrTreeHeader = function(header) {
 bigwig.BigwigReader.prototype.readChrTreeNode = function(header, offset) {
   var self = this;
   return new Promise(function(resolve, reject) {
-    self.get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.CHR_TREE_NODE_SIZE)), function (e) {
-      var buf = e.target.response;
+    self._get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.CHR_TREE_NODE_SIZE)), function (buf) {
       var ret = bigwig.models.ChrTreeNode.fromArrayBuffer(buf, header.littleEndian);
       resolve(ret);
     });
@@ -2092,8 +2185,7 @@ bigwig.BigwigReader.prototype.readChrTreeNodeItems = function(header, treeHeader
     var nodeSize = bigwig.BigwigReader.CHR_TREE_NODE_SIZE;
     // TODO: There may be a bug here: treeHeader.blockSize may not always have the exact number of items!
     var end = offset.add(goog.math.Long.fromNumber(nodeSize + treeHeader.blockSize * itemSize));
-    self.get(offset, end, function(e) {
-      var buf = e.target.response;
+    self._get(offset, end, function(buf) {
       var node = bigwig.models.ChrTreeNode.fromDataView(new DataView(buf, 0, nodeSize), header.littleEndian);
       var items = [];
       for (var i = 0; i < node.count; ++i) {
@@ -2160,8 +2252,7 @@ bigwig.BigwigReader.prototype.readDataCount = function(header) {
   var self = this;
   return new Promise(function(resolve, reject) {
     var offset = header.fullDataOffset;
-    self.get(offset, offset.add(goog.math.Long.fromNumber(4)), function(e) {
-      var buf = e.target.response;
+    self._get(offset, offset.add(goog.math.Long.fromNumber(4)), function(buf) {
       var view = new DataView(buf);
       resolve(view.getUint32(0, header.littleEndian));
     });
@@ -2177,8 +2268,7 @@ bigwig.BigwigReader.prototype.readRTreeHeader = function(header, offset) {
   var self = this;
   return new Promise(function(resolve, reject) {
     offset = offset || header.fullIndexOffset;
-    self.get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_HEADER_SIZE)), function(e) {
-      var buf = e.target.response;
+    self._get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_HEADER_SIZE)), function(buf) {
       var ret = bigwig.models.RTreeHeader.fromArrayBuffer(buf, header.littleEndian);
       resolve(ret);
     });
@@ -2193,8 +2283,7 @@ bigwig.BigwigReader.prototype.readRTreeHeader = function(header, offset) {
 bigwig.BigwigReader.prototype.readRTreeNode = function(header, offset) {
   var self = this;
   return new Promise(function(resolve, reject) {
-    self.get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_NODE_SIZE)), function(e) {
-      var buf = e.target.response;
+    self._get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_NODE_SIZE)), function(buf) {
       var ret = bigwig.models.RTreeNode.fromArrayBuffer(buf, header.littleEndian);
       resolve(ret);
     });
@@ -2214,8 +2303,7 @@ bigwig.BigwigReader.prototype.readRTreeNodeItems = function(header, offset) {
         var itemsOffset = offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_NODE_SIZE));
         var itemSize = node.isLeaf ? bigwig.BigwigReader.R_TREE_NODE_LEAF_SIZE : bigwig.BigwigReader.R_TREE_NODE_ITEM_SIZE;
         var end = itemsOffset.add(goog.math.Long.fromNumber(node.count * itemSize));
-        self.get(itemsOffset, end, function(e) {
-          var buf = e.target.response;
+        self._get(itemsOffset, end, function(buf) {
           var items = [];
           for (var i = 0; i < node.count; ++i) {
             items.push(
@@ -2312,8 +2400,7 @@ bigwig.BigwigReader.prototype.readData = function(header, leaf) {
     var start = leaf.dataOffset;
     var end = leaf.dataOffset.add(leaf.dataSize);
 
-    self.get(start, end, function(e) {
-      var buf = e.target.response;
+    self._get(start, end, function(buf) {
       // TODO: Check whether it is compressed or not
       var compressed = new Uint8Array(buf, 0);
       var inflate = new Zlib.Inflate(compressed);
@@ -2346,8 +2433,7 @@ bigwig.BigwigReader.prototype.readZoomData = function(header, leaf) {
     var start = leaf.dataOffset;
     var end = leaf.dataOffset.add(leaf.dataSize);
 
-    self.get(start, end, function(e) {
-      var buf = e.target.response;
+    self._get(start, end, function(buf) {
       // TODO: Check whether it is compressed or not
       var compressed = new Uint8Array(buf, 0);
       var inflate = new Zlib.Inflate(compressed);
@@ -2489,14 +2575,15 @@ goog.require('bigwig.DataRecordZoom');
 /**
  * @param {string} uri
  * @param {string} [fwdUri]
+ * @param {number} [cacheBlockSize] Default is 512KB
  * @constructor
  */
-bigwig.BigwigFile = function(uri, fwdUri) {
+bigwig.BigwigFile = function(uri, fwdUri, cacheBlockSize) {
   /**
    * @type {bigwig.BigwigReader}
    * @private
    */
-  this._reader = new bigwig.BigwigReader(uri, fwdUri);
+  this._reader = new bigwig.BigwigReader(uri, fwdUri, cacheBlockSize);
 
   /**
    * @type {bigwig.models.Header}

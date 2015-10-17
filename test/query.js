@@ -12,7 +12,7 @@ if (window['BW_DEBUG']) {
 var main = angular.module('main', []);
 
 main.controller('Query', ['$scope', function($scope) {
-  $scope.file = 'http://localhost/E120-H3K9ac.pval.signal.bigwig';//'http://egg2.wustl.edu/roadmap/data/byFileType/signal/consolidated/macs2signal/pval/E001-H3K4me1.pval.signal.bigwig';
+  $scope.file = /*'http://localhost/E120-H3K9ac.pval.signal.bigwig';*/'http://egg2.wustl.edu/roadmap/data/byFileType/signal/consolidated/macs2signal/pval/E001-H3K4me1.pval.signal.bigwig';
   $scope.query = 'chr=chr1&start=0&end=100000';
   $scope.message = 'Result will be shown here.';
   $scope.results = [];
@@ -21,6 +21,8 @@ main.controller('Query', ['$scope', function($scope) {
   $scope.chromosomes = [];
   $scope.zoomLevel = 'none';
   $scope.zoomLevels = [];
+  $scope.time = 0;
+  $scope.cacheBlockSize = 0;
 
   $scope.bigwig = null;
 
@@ -66,11 +68,12 @@ main.controller('Query', ['$scope', function($scope) {
     }
 
     if (!this.bigwig) {
-      //this.bigwig = new bigwig.BigwigFile(this.file, 'http://epiviz-dev.cbcb.umd.edu/bigwig/partial.php');
-      //this.bigwig = new bigwig.BigwigFile(this.file, 'http://localhost/bigwig/test/partial.php');
-      this.bigwig = new bigwig.BigwigFile(this.file);
+      this.bigwig = new bigwig.BigwigFile(this.file, 'http://epiviz-dev.cbcb.umd.edu/bigwig/partial.php', parseInt(this.cacheBlockSize));
+      //this.bigwig = new bigwig.BigwigFile(this.file, 'http://localhost/bigwig/test/partial.php', true);
+      //this.bigwig = new bigwig.BigwigFile(this.file);
     }
 
+    var startTime = new Date();
     var self = this;
     var init = this.bigwig.initialized;
     init
@@ -86,12 +89,13 @@ main.controller('Query', ['$scope', function($scope) {
         }
 
         var zoomLevel = self.zoomLevel == 'none' ? undefined : parseInt(self.zoomLevel);
-        var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end), {maxBases: 10000, maxItems: 1000, level: zoomLevel});
+        //var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end), {maxBases: 10000, maxItems: 1000, level: zoomLevel});
         //var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end), {level: zoomLevel});
-        //var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end));
+        var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end));
         return ret;
       })
       .then(function(d) {
+        self.time = new Date() - startTime;
         self.message = 'Success!';
         self.success = true;
         self.results = d;
@@ -101,3 +105,19 @@ main.controller('Query', ['$scope', function($scope) {
       });
   }
 }]);
+
+/*$(function() {
+  var b = new bigwig.BigwigReader('http://localhost/E120-H3K9ac.pval.signal.bigwig', 'http://localhost/bigwig/test/partial.php');
+  for (var i = 0; i < 5; ++i) {
+    b.getCached(0, 16, function (buf) {
+      var bytes = new Uint8Array(buf);
+      console.log(bytes);
+    });
+  }
+  for (var i = 0; i < 5; ++i) {
+    b.getCached(16, 32, function (buf) {
+      var bytes = new Uint8Array(buf);
+      console.log(bytes);
+    });
+  }
+});*/

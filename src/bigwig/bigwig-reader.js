@@ -32,9 +32,10 @@ goog.require('bigwig.ChrTree');
 /**
  * @param {string} uri
  * @param {string} [fwdUri]
+ * @param {number} [cacheSize] Default is 512KB
  * @constructor
  */
-bigwig.BigwigReader = function(uri, fwdUri) {
+bigwig.BigwigReader = function(uri, fwdUri, cacheSize) {
   /**
    * @type {string}
    * @private
@@ -46,9 +47,50 @@ bigwig.BigwigReader = function(uri, fwdUri) {
    * @private
    */
   this._fwdUri = fwdUri || null;
+
+  /**
+   * @type {goog.math.Long}
+   * @private
+   */
+  this._fileSize = null;
+
+  var self = this;
+
+  /**
+   * @type {Promise}
+   * @private
+   */
+  this._fileSizePromise = new Promise(function(resolve, reject) {
+    if (self._fileSize != undefined) { resolve(self._fileSize); return; }
+    self.get(0, 1, function(response, xhr) {
+      var rangeHeader = xhr.getResponseHeader('Content-Range');
+      self._fileSize = goog.math.Long.fromString(rangeHeader.substr(rangeHeader.indexOf('/') + 1));
+      resolve(self._fileSize);
+    });
+  });
+
+  /**
+   * @type {number}
+   * @private
+   */
+  this._cacheSize = (cacheSize && cacheSize > 0) ? cacheSize * 1024 : bigwig.BigwigReader.CACHE_BLOCK_SIZE;
+
+  /**
+   * @type {Function}
+   * @private
+   */
+  this._get = (cacheSize === 0) ? this.get : this.getCached;
+
+  /**
+   * @type {Object.<string, Promise>}
+   * @private
+   */
+  this._cache = {};
 };
 
 bigwig.BigwigReader.N_RETRIES = 10;
+
+bigwig.BigwigReader.CACHE_BLOCK_SIZE = 1024 * 512;
 
 /**
  * @const {number}
@@ -117,7 +159,7 @@ bigwig.BigwigReader.RECORD_TYPES = {
 /**
  * @param {number|goog.math.Long} start
  * @param {number|goog.math.Long} end
- * @param {function(*)} callback
+ * @param {function(ArrayBuffer, XMLHttpRequest)} callback
  */
 bigwig.BigwigReader.prototype.get = function(start, end, callback) {
   var self = this;
@@ -125,12 +167,15 @@ bigwig.BigwigReader.prototype.get = function(start, end, callback) {
   var s = /** @type {string|number} */ ((start instanceof goog.math.Long) ? start.toString() : start);
   var e = /** @type {string|number} */ ((end instanceof goog.math.Long) ? end.subtract(goog.math.Long.fromInt(1)).toString() : end - 1);
   var uri = this._fwdUri ? goog.string.format('%s?r=%s-%s&q=%s', this._fwdUri, s, e, this._uri)  : this._uri;
+
   var retry = function() {
     var req = new XMLHttpRequest();
     req.open('GET', uri, true);
     if (!self._fwdUri) { req.setRequestHeader('Range', goog.string.format('bytes=%s-%s', s, e)); }
     req.responseType = 'arraybuffer';
-    req.onload = callback;
+    req.onload = function(e) {
+      callback(e.target.response, e.target);
+    };
     req.onreadystatechange = function () {
       if (req.readyState === 4) {
         if (req.status === 200 || req.status == 206) {
@@ -151,14 +196,66 @@ bigwig.BigwigReader.prototype.get = function(start, end, callback) {
   retry();
 };
 
+bigwig.BigwigReader.prototype.getFileSize = function() {
+  return this._fileSizePromise;
+};
+
+/**
+ * @param {number|goog.math.Long} start
+ * @param {number|goog.math.Long} end
+ * @param {function(ArrayBuffer)} callback
+ */
+bigwig.BigwigReader.prototype.getCached = function(start, end, callback) {
+  var self = this;
+
+  if (self._fileSize == undefined) {
+    self.getFileSize()
+      .then(function() {
+        self.getCached(start, end, callback);
+      });
+    return;
+  }
+
+  var lStart = (start instanceof goog.math.Long) ? start : goog.math.Long.fromNumber(/** @type {number} */(start));
+  var lEnd = (end instanceof goog.math.Long) ? end : goog.math.Long.fromNumber(/** @type {number} */(end));
+
+  var blockSize = goog.math.Long.fromNumber(this._cacheSize);
+  var startBl = lStart.div(blockSize);
+  var endBl = lEnd.div(blockSize);
+  var s = startBl.multiply(blockSize);
+  var e = s.add(blockSize);
+  if (!startBl.equals(endBl)) {
+    self.get(start, end, callback);
+    return;
+  }
+
+  var b = startBl.toString();
+  var promise = this._cache[b];
+  if (!promise) {
+    promise = new Promise(function(resolve, reject) {
+      if (e.greaterThan(self._fileSize)) {
+        e = self._fileSize;
+      }
+      self.get(s, e, function(buf) {
+        resolve(buf);
+      });
+    });
+    this._cache[b] = promise;
+  }
+  promise.then(function(buf) {
+    var begin = lStart.subtract(s).toNumber();
+    var end = lEnd.subtract(s).toNumber();
+    callback(buf.slice(begin, end));
+  });
+};
+
 /**
  * @returns {Promise} Promise.<bigwig.models.Header>
  */
 bigwig.BigwigReader.prototype.readHeader = function() {
   var self = this;
   return new Promise(function(resolve, reject) {
-    self.get(0, bigwig.BigwigReader.HEADER_SIZE, function(e) {
-      var buf = e.target.response;
+    self._get(0, bigwig.BigwigReader.HEADER_SIZE, function(buf) {
       var header = bigwig.models.Header.fromArrayBuffer(buf);
       resolve(header);
     });
@@ -176,8 +273,7 @@ bigwig.BigwigReader.prototype.readZoomHeader = function(header, index) {
   return new Promise(function(resolve, reject) {
     var offset = bigwig.BigwigReader.HEADER_SIZE;
     var zoomHeaderSize = bigwig.BigwigReader.ZOOM_HEADER_SIZE;
-    self.get(offset + index * zoomHeaderSize, offset + (index + 1) * zoomHeaderSize, function(e) {
-      var buf = e.target.response;
+    self._get(offset + index * zoomHeaderSize, offset + (index + 1) * zoomHeaderSize, function(buf) {
       var ret = bigwig.models.ZoomHeader.fromArrayBuffer(buf, header.littleEndian);
       resolve(ret);
     });
@@ -212,8 +308,7 @@ bigwig.BigwigReader.prototype.readTotalSummary = function(header) {
     var offset =
       bigwig.BigwigReader.HEADER_SIZE +
       bigwig.BigwigReader.ZOOM_HEADER_SIZE * header.zoomLevels;
-    self.get(offset, offset + bigwig.BigwigReader.TOTAL_SUMMARY_SIZE, function(e) {
-      var buf = e.target.response;
+    self._get(offset, offset + bigwig.BigwigReader.TOTAL_SUMMARY_SIZE, function(buf) {
       var ret = bigwig.models.TotalSummary.fromArrayBuffer(buf, header.littleEndian);
       resolve(ret);
     });
@@ -229,8 +324,7 @@ bigwig.BigwigReader.prototype.readChrTreeHeader = function(header) {
   return new Promise(function(resolve, reject) {
     /** @type {goog.math.Long} */
     var offset = header.chromosomeTreeOffset;
-    self.get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.CHR_TREE_HEADER_SIZE)), function(e) {
-      var buf = e.target.response;
+    self._get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.CHR_TREE_HEADER_SIZE)), function(buf) {
       var ret = bigwig.models.ChrTreeHeader.fromArrayBuffer(buf, header.littleEndian);
       resolve(ret);
     });
@@ -245,8 +339,7 @@ bigwig.BigwigReader.prototype.readChrTreeHeader = function(header) {
 bigwig.BigwigReader.prototype.readChrTreeNode = function(header, offset) {
   var self = this;
   return new Promise(function(resolve, reject) {
-    self.get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.CHR_TREE_NODE_SIZE)), function (e) {
-      var buf = e.target.response;
+    self._get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.CHR_TREE_NODE_SIZE)), function (buf) {
       var ret = bigwig.models.ChrTreeNode.fromArrayBuffer(buf, header.littleEndian);
       resolve(ret);
     });
@@ -267,8 +360,7 @@ bigwig.BigwigReader.prototype.readChrTreeNodeItems = function(header, treeHeader
     var nodeSize = bigwig.BigwigReader.CHR_TREE_NODE_SIZE;
     // TODO: There may be a bug here: treeHeader.blockSize may not always have the exact number of items!
     var end = offset.add(goog.math.Long.fromNumber(nodeSize + treeHeader.blockSize * itemSize));
-    self.get(offset, end, function(e) {
-      var buf = e.target.response;
+    self._get(offset, end, function(buf) {
       var node = bigwig.models.ChrTreeNode.fromDataView(new DataView(buf, 0, nodeSize), header.littleEndian);
       var items = [];
       for (var i = 0; i < node.count; ++i) {
@@ -335,8 +427,7 @@ bigwig.BigwigReader.prototype.readDataCount = function(header) {
   var self = this;
   return new Promise(function(resolve, reject) {
     var offset = header.fullDataOffset;
-    self.get(offset, offset.add(goog.math.Long.fromNumber(4)), function(e) {
-      var buf = e.target.response;
+    self._get(offset, offset.add(goog.math.Long.fromNumber(4)), function(buf) {
       var view = new DataView(buf);
       resolve(view.getUint32(0, header.littleEndian));
     });
@@ -352,8 +443,7 @@ bigwig.BigwigReader.prototype.readRTreeHeader = function(header, offset) {
   var self = this;
   return new Promise(function(resolve, reject) {
     offset = offset || header.fullIndexOffset;
-    self.get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_HEADER_SIZE)), function(e) {
-      var buf = e.target.response;
+    self._get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_HEADER_SIZE)), function(buf) {
       var ret = bigwig.models.RTreeHeader.fromArrayBuffer(buf, header.littleEndian);
       resolve(ret);
     });
@@ -368,8 +458,7 @@ bigwig.BigwigReader.prototype.readRTreeHeader = function(header, offset) {
 bigwig.BigwigReader.prototype.readRTreeNode = function(header, offset) {
   var self = this;
   return new Promise(function(resolve, reject) {
-    self.get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_NODE_SIZE)), function(e) {
-      var buf = e.target.response;
+    self._get(offset, offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_NODE_SIZE)), function(buf) {
       var ret = bigwig.models.RTreeNode.fromArrayBuffer(buf, header.littleEndian);
       resolve(ret);
     });
@@ -389,8 +478,7 @@ bigwig.BigwigReader.prototype.readRTreeNodeItems = function(header, offset) {
         var itemsOffset = offset.add(goog.math.Long.fromNumber(bigwig.BigwigReader.R_TREE_NODE_SIZE));
         var itemSize = node.isLeaf ? bigwig.BigwigReader.R_TREE_NODE_LEAF_SIZE : bigwig.BigwigReader.R_TREE_NODE_ITEM_SIZE;
         var end = itemsOffset.add(goog.math.Long.fromNumber(node.count * itemSize));
-        self.get(itemsOffset, end, function(e) {
-          var buf = e.target.response;
+        self._get(itemsOffset, end, function(buf) {
           var items = [];
           for (var i = 0; i < node.count; ++i) {
             items.push(
@@ -487,8 +575,7 @@ bigwig.BigwigReader.prototype.readData = function(header, leaf) {
     var start = leaf.dataOffset;
     var end = leaf.dataOffset.add(leaf.dataSize);
 
-    self.get(start, end, function(e) {
-      var buf = e.target.response;
+    self._get(start, end, function(buf) {
       // TODO: Check whether it is compressed or not
       var compressed = new Uint8Array(buf, 0);
       var inflate = new Zlib.Inflate(compressed);
@@ -521,8 +608,7 @@ bigwig.BigwigReader.prototype.readZoomData = function(header, leaf) {
     var start = leaf.dataOffset;
     var end = leaf.dataOffset.add(leaf.dataSize);
 
-    self.get(start, end, function(e) {
-      var buf = e.target.response;
+    self._get(start, end, function(buf) {
       // TODO: Check whether it is compressed or not
       var compressed = new Uint8Array(buf, 0);
       var inflate = new Zlib.Inflate(compressed);

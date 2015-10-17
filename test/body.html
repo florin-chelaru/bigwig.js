@@ -10,6 +10,9 @@
 <input type="text" ng-model="query" style="width: 800px;" />
 <button ng-click="sendQuery()">Go</button>
 <br />
+<label>Cache block size (KB):</label>
+<input type="number" ng-model="cacheBlockSize" />
+<br/>
 
 <div ng-show="initialized">
   <label>Zoom level:</label><br>
@@ -42,6 +45,7 @@
   </div>
 
   <div ng-show="success">
+    <label>Elapsed time:</label><span>{{ time }}</span>
     <table>
       <thead><tr>
         <th>Chr</th>
