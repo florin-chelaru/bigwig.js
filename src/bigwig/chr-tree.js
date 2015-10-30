@@ -75,7 +75,7 @@ bigwig.ChrTree.prototype.getLeaf = function (chrIdOrKey) {
 
 /**
  * @type {Array.<bigwig.ChrTree.Node>}
- * @name {bigwig.ChrTree#leaves}
+ * @name bigwig.ChrTree#leaves
  */
 bigwig.ChrTree.prototype.leaves;
 

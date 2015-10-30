@@ -97,29 +97,31 @@ bigwig.BigwigFile = function(uri, fwdUri, cacheBlockSize) {
 };
 
 /**
- * @param {string|number} chr
- * @param {number} start
- * @param {number} end
+ * @param {{chr: (string|number), start: number, end: number}} [range]
  * @param {{level: (number|undefined), maxItems: (number|undefined), maxBases: (number|undefined)}} [zoom]
- * @returns {Promise} Promise.<bigwig.DataRecord>}
+ * @returns {Promise} Promise.<Array.<bigwig.DataRecord>>}
  */
-bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
+bigwig.BigwigFile.prototype.query = function(range, zoom) {
   var self = this;
   var resolve, reject;
   var promise = new Promise(function() { resolve = arguments[0]; reject = arguments[1]; });
 
   if (!this._initializedFired) {
     this['initialized'].then(function() {
-      self.query(chr, start, end, zoom).then(resolve);
+      self.query(range, zoom).then(resolve);
     });
     return promise;
   }
 
   /**
-   * @type {bigwig.ChrTree.Node}
+   * @type {number}
    */
-  var chrNode = this._chrTree.getLeaf(chr);
-  var chrId = /** @type {number} */ (chrNode['chrId']);
+  var chrId;
+
+  if (range) {
+    chrId = /** @type {number} */ (this._chrTree.getLeaf(range['chr'])['chrId']);
+    range = {'chr': chrId, 'start': range['start'], 'end': range['end']};
+  }
 
   // Adaptive zoom
   if (zoom && zoom['level'] == undefined &&
@@ -128,10 +130,15 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
     if (!zoom['maxItems']) { zoom['maxItems'] = zoom['maxBases']; }
     var basesPerItem = this._zoomHeaders.map(function(z) { return z.reductionLevel; });
     var i = -1;
-    if (end - start > zoom['maxBases']) { ++i; }
+
+    // If there is no specified range, then we look at the entire genome
+    var rangeWidth = range ? range['end'] - range['start'] :
+      this._chrTree.leaves.map(/** @param {bigwig.ChrTree.Node} leaf */ function(leaf) { return leaf['chrSize']; })
+        .reduce(function(s1, s2) { return s1 + s2; });
+    if (rangeWidth > zoom['maxBases']) { ++i; }
     if (i == 0) {
       for (; i < this._zoomHeaders.length - 1; ++i) {
-        if ((end - start) / basesPerItem[i] <= zoom['maxItems']) { break; }
+        if ((rangeWidth) / basesPerItem[i] <= zoom['maxItems']) { break; }
       }
     }
 
@@ -142,11 +149,11 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
   var indexTree = useZoom ? this._zoomTrees[zoom['level']]: this._indexTree;
   if (!indexTree) {
     var treeOffset = useZoom ? this._zoomHeaders[zoom['level']].indexOffset : this._header.fullIndexOffset;
-    this._reader.readRootedIndexBlock(this._header, chrId, start, end, treeOffset)
+    this._reader.readRootedIndexBlock(this._header, range, treeOffset)
       .then(function(tree) {
         if (useZoom) { self._zoomTrees[zoom['level']] = tree; }
         else { self._indexTree = tree; }
-        self.query(chrId, start, end, zoom).then(resolve);
+        self.query(range, zoom).then(resolve);
       });
     return promise;
   }
@@ -154,17 +161,17 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
   /**
    * @type {Array.<bigwig.IndexTree.Node>}
    */
-  var nodes = indexTree.query(chrId, start, end);
+  var nodes = indexTree.query(range);
   var remaining = 0;
   nodes.forEach(function(node) {
     if (!node.isLeaf) {
       ++remaining;
-      self._reader.readIndexBlock(self._header, chrId, start, end, /** @type {goog.math.Long} */ (node.dataOffset))
+      self._reader.readIndexBlock(self._header, /** @type {{chr: number, start: number, end: number}} */ (range), /** @type {goog.math.Long} */ (node.dataOffset))
         .then(function(children) {
           node.children = children;
           --remaining;
           if (!remaining) {
-            self.query(chrId, start, end, zoom).then(resolve);
+            self.query(range, zoom).then(resolve);
           }
         });
     }
@@ -188,7 +195,7 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
 
             --remaining;
             if (!remaining) {
-              self.query(chrId, start, end, zoom).then(resolve);
+              self.query(range, zoom).then(resolve);
             }
           });
       } else {
@@ -204,7 +211,7 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
 
             --remaining;
             if (!remaining) {
-              self.query(chrId, start, end, zoom).then(resolve);
+              self.query(range, zoom).then(resolve);
             }
           });
       }
@@ -214,7 +221,9 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
   if (remaining) { return promise; }
 
   var ret = nodes
-    .map(function(node) { return node.dataRecords.filter(/** @param {bigwig.DataRecord} r */ function(r) { return r['chr'] == chrId && r['start'] < end && r['end'] > start; })})
+    .map(function(node) {
+      return !range ? node.dataRecords :
+        node.dataRecords.filter(/** @param {bigwig.DataRecord} r */ function(r) { return r['chr'] == range['chr'] && r['start'] < range['end'] && r['end'] > range['start']; })})
     .reduce(function(a1, a2) { return a1.concat(a2); });
 
   resolve(ret);
@@ -224,19 +233,19 @@ bigwig.BigwigFile.prototype.query = function(chr, start, end, zoom) {
 
 /**
  * @type {Promise}
- * @name {bigwig.BigwigFile#initialized}
+ * @name bigwig.BigwigFile#initialized
  */
 bigwig.BigwigFile.prototype.initialized;
 
 /**
  * @type {{basesCovered: string, min: number, max: number, sumData: number, sumSquares: number}}
- * @name {bigwig.BigwigFile#summary}
+ * @name bigwig.BigwigFile#summary
  */
 bigwig.BigwigFile.prototype.summary;
 
 /**
  * @type {number}
- * @name {bigwig.BigwigFile#zoomLevels}
+ * @name bigwig.BigwigFile#zoomLevels
  */
 bigwig.BigwigFile.prototype.zoomLevels;
 

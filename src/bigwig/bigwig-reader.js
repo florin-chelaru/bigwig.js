@@ -629,13 +629,11 @@ bigwig.BigwigReader.prototype.readZoomData = function(header, leaf) {
 
 /**
  * @param {bigwig.models.Header} header
- * @param {number} chr
- * @param {number} start
- * @param {number} end
+ * @param {{chr: number, start: number, end: number}|undefined} range
  * @param {goog.math.Long} offset
  * @returns {Promise} Promise.<Array.<bigwig.IndexTree.Node>>
  */
-bigwig.BigwigReader.prototype.readIndexBlock = function(header, chr, start, end, offset) {
+bigwig.BigwigReader.prototype.readIndexBlock = function(header, range, offset) {
   var self = this;
 
   return new Promise(function(resolve, reject) {
@@ -678,16 +676,16 @@ bigwig.BigwigReader.prototype.readIndexBlock = function(header, chr, start, end,
             });
             nodes.push(node);
 
-            if (it.startChromIx > chr && it.endChromIx < chr) {
+            if (range && it.startChromIx > range['chr'] && it.endChromIx < range['chr']) {
               itResolve();
               return;
             }
-            if (it.endChromIx == chr && it.endBase <= start || it.startChromIx == chr && it.startBase >= end) {
+            if (range && ((it.endChromIx == range['chr'] && it.endBase <= range['start']) || (it.startChromIx == range['chr'] && it.startBase >= range['end']))) {
               itResolve();
               return;
             }
 
-            self.readIndexBlock(header, chr, start, end, it.dataOffset)
+            self.readIndexBlock(header, range, it.dataOffset)
               .then(function(children) {
                 node.children = children;
                 itResolve();
@@ -702,13 +700,11 @@ bigwig.BigwigReader.prototype.readIndexBlock = function(header, chr, start, end,
 
 /**
  * @param {bigwig.models.Header} header
- * @param {number} chr
- * @param {number} start
- * @param {number} end
+ * @param {{chr: number, start: number, end: number}} [range]
  * @param {goog.math.Long} [offset]
  * @returns {Promise} Promise.<bigwig.IndexTree>
  */
-bigwig.BigwigReader.prototype.readRootedIndexBlock = function(header, chr, start, end, offset) {
+bigwig.BigwigReader.prototype.readRootedIndexBlock = function(header, range, offset) {
   var self = this;
 
   return new Promise(function(resolve, reject) {
@@ -726,7 +722,7 @@ bigwig.BigwigReader.prototype.readRootedIndexBlock = function(header, chr, start
           dataOffset: rootOffset
         });
 
-        self.readIndexBlock(header, chr, start, end, rootOffset)
+        self.readIndexBlock(header, range, rootOffset)
           .then(function(children) {
             root.children = children;
             resolve(new bigwig.IndexTree(root));

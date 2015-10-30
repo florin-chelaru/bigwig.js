@@ -91,10 +91,29 @@ main.controller('Query', ['$scope', function($scope) {
         var zoomLevel = self.zoomLevel == 'none' ? undefined : parseInt(self.zoomLevel);
         //var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end), {maxBases: 10000, maxItems: 1000, level: zoomLevel});
         //var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end), {level: zoomLevel});
-        var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end));
+        //var ret = file.query(args.chr, parseInt(args.start), parseInt(args.end), {level:zoomLevel});
+        var ret = file.query(undefined, {maxItems: 50000});
         return ret;
       })
-      .then(function(d) {
+      .then(/** @param {Array.<bigwig.DataRecord>} d */ function(d) {
+        d.sort(
+          /**
+           * @param {bigwig.DataRecord} r1
+           * @param {bigwig.DataRecord} r2
+           */
+          function(r1, r2) {
+            if (r1.chr != r2.chr) {
+              var id1 = r1.chrName.substr(3);
+              var id2 = r2.chrName.substr(3);
+              var n1 = parseInt(id1);
+              var n2 = parseInt(id2);
+              if (isNaN(n1) || isNaN(n2)) {
+                return id1 < id2 ? -1 : 1;
+              }
+              return n1 - n2;
+            }
+            return r1.start - r2.start;
+          });
         self.time = new Date() - startTime;
         self.message = 'Success!';
         self.success = true;

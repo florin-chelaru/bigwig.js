@@ -13,25 +13,25 @@ bigwig.DataRecord = function() {};
 
 /**
  * @type {number}
- * @name {bigwig.DataRecord#chrName}
+ * @name bigwig.DataRecord#chrName
  */
 bigwig.DataRecord.prototype.chrName;
 
 /**
  * @type {number}
- * @name {bigwig.DataRecord#chr}
+ * @name bigwig.DataRecord#chr
  */
 bigwig.DataRecord.prototype.chr;
 
 /**
  * @type {number}
- * @name {bigwig.DataRecord#start}
+ * @name bigwig.DataRecord#start
  */
 bigwig.DataRecord.prototype.start;
 
 /**
  * @type {number}
- * @name {bigwig.DataRecord#end}
+ * @name bigwig.DataRecord#end
  */
 bigwig.DataRecord.prototype.end;
 

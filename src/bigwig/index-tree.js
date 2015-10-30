@@ -22,17 +22,15 @@ goog.inherits(bigwig.IndexTree, bigwig.Tree);
 
 /**
  * Gets all the leaves that overlap the given query range
- * @param {number} chr
- * @param {number} start
- * @param {number} end
+ * @param {{chr: number, start: number, end: number}} [range]
  * @returns {Array.<bigwig.IndexTree.Node>}
  */
-bigwig.IndexTree.prototype.query = function(chr, start, end) {
+bigwig.IndexTree.prototype.query = function(range) {
   var ret = [];
   this.dfs(/** @type {function(bigwig.Tree.Node)} */ (function(node) {
       // don't visit the rest of the subtree if the node range doesn't overlap the query range
-      if (node.endChrId < chr || node.startChrId > chr) { return true; }
-      if (node.startChrId == chr && node.startBase >= end || node.endChrId == chr && node.endBase <= start) { return true; }
+      if (range && (node.endChrId < range['chr'] || node.startChrId > range['chr'])) { return true; }
+      if (range && ((node.startChrId == range['chr'] && node.startBase >= range['end']) || (node.endChrId == range['chr'] && node.endBase <= range['start']))) { return true; }
 
       // get the leaves of this node
       if (node.children && node.children.length) { return false; } // continue
