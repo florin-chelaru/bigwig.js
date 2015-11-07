@@ -94,10 +94,11 @@
       <arg line="&#45;&#45;create_source_map=${outfile}.map"/>
       <arg line="&#45;&#45;manage_closure_dependencies"/>
       <arg line="&#45;&#45;externs=${externs}"/>
+      <arg line="&#45;&#45;js ${rootpath}/LICENSE"/>
       <arg line="${srcfiles}"/>
       <arg line="${exportfiles}"/>
     </java>
-    <loadfile srcfile="${compiledmin}" property="minimized"/>
-    <concat destfile="${compiledmin}" eol="lf"><header filtering="no" trimleading="yes">${license}</header>${minimized}</concat>
+    <!--<loadfile srcfile="${compiledmin}" property="minimized"/>
+    <concat destfile="${compiledmin}" eol="lf"><header filtering="no" trimleading="yes">${license}</header>${minimized}</concat>-->
   </target>
 </project>
