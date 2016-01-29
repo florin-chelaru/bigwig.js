@@ -22,6 +22,9 @@ function parse_headers($headers_str) {
     if ($i === 0) {
       $headers['http_code'] = $line;
     } else {
+      if (empty(trim($line))) {
+        continue;
+      }
       list ($key, $value) = explode(': ', $line);
       $headers[$key] = $value;
     }

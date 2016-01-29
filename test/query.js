@@ -68,7 +68,8 @@ main.controller('Query', ['$scope', function($scope) {
     }
 
     if (!this.bigwig) {
-      this.bigwig = new bigwig.BigwigFile(this.file, 'http://epiviz-dev.cbcb.umd.edu/bigwig/partial.php', parseInt(this.cacheBlockSize));
+      //this.bigwig = new bigwig.BigwigFile(this.file, 'http://epiviz-dev.cbcb.umd.edu/bigwig/partial.php', parseInt(this.cacheBlockSize));
+      this.bigwig = new bigwig.BigwigFile(this.file, 'partial.php', parseInt(this.cacheBlockSize));
       //this.bigwig = new bigwig.BigwigFile(this.file, 'http://localhost/bigwig/test/partial.php', true);
       //this.bigwig = new bigwig.BigwigFile(this.file);
     }
