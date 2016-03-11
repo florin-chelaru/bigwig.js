@@ -244,6 +244,12 @@ bigwig.BigwigFile.prototype.initialized;
 bigwig.BigwigFile.prototype.summary;
 
 /**
+ * @type {Array.<bigwig.ChrTree.Node>}
+ * @name bigwig.BigwigFile#chromosomes
+ */
+bigwig.BigwigFile.prototype.chromosomes;
+
+/**
  * @type {number}
  * @name bigwig.BigwigFile#zoomLevels
  */
