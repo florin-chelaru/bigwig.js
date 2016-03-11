@@ -51,13 +51,25 @@
         <th>Chr</th>
         <th>Start</th>
         <th>End</th>
-        <th>Value</th>
+        <th>Min</th>
+        <th>Max</th>
+        <th>Sum</th>
+        <th>Avg</th>
+        <th>SumSq</th>
+        <th>Norm</th>
+        <th>Cnt</th>
       </tr></thead>
       <tr ng-repeat="result in results">
         <td>{{ result.chrName }}</td>
         <td>{{ result.start }}</td>
         <td>{{ result.end }}</td>
-        <td>{{ result.value(bigwig.DataRecord.Aggregate.MAX) }}</td>
+        <td>{{ result.min }}</td>
+        <td>{{ result.max }}</td>
+        <td>{{ result.sum }}</td>
+        <td>{{ result.avg }}</td>
+        <td>{{ result.sumsq }}</td>
+        <td>{{ result.norm }}</td>
+        <td>{{ result.cnt }}</td>
       </tr>
     </table>
   </div>

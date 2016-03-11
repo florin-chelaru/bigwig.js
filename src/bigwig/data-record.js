@@ -12,7 +12,7 @@ goog.provide('bigwig.DataRecord');
 bigwig.DataRecord = function() {};
 
 /**
- * @type {number}
+ * @type {string}
  * @name bigwig.DataRecord#chrName
  */
 bigwig.DataRecord.prototype.chrName;
@@ -35,15 +35,89 @@ bigwig.DataRecord.prototype.start;
  */
 bigwig.DataRecord.prototype.end;
 
+/**
+ * @type {number}
+ * @name bigwig.DataRecord#min
+ */
+bigwig.DataRecord.prototype.min;
+
+/**
+ * @type {number}
+ * @name bigwig.DataRecord#max
+ */
+bigwig.DataRecord.prototype.max;
+
+/**
+ * @type {number}
+ * @name bigwig.DataRecord#sum
+ */
+bigwig.DataRecord.prototype.sum;
+
+/**
+ * @type {number}
+ * @name bigwig.DataRecord#sumsq
+ */
+bigwig.DataRecord.prototype.sumsq;
+
+/**
+ * @type {number}
+ * @name bigwig.DataRecord#avg
+ */
+bigwig.DataRecord.prototype.avg;
+
+/**
+ * @type {number}
+ * @name bigwig.DataRecord#norm
+ */
+bigwig.DataRecord.prototype.norm;
+
+/**
+ * @type {number}
+ * @name bigwig.DataRecord#cnt
+ */
+bigwig.DataRecord.prototype.cnt;
+
 Object.defineProperties(bigwig.DataRecord.prototype, {
+  'min': {
+    get: /** @type {function (this:bigwig.DataRecord)} */ (function () {
+      return this.value(bigwig.DataRecord.Aggregate['MIN'])
+    })
+  },
+  'max': {
+    get: /** @type {function (this:bigwig.DataRecord)} */ (function () {
+      return this.value(bigwig.DataRecord.Aggregate['MAX'])
+    })
+  },
 
-  'chrName': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); }) },
+  'sum': {
+    get: /** @type {function (this:bigwig.DataRecord)} */ (function () {
+      return this.value(bigwig.DataRecord.Aggregate['SUM'])
+    })
+  },
 
-  'chr': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); }) },
+  'avg': {
+    get: /** @type {function (this:bigwig.DataRecord)} */ (function () {
+      return this.value(bigwig.DataRecord.Aggregate['AVG'])
+    })
+  },
 
-  'start': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); })},
+  'sumsq': {
+    get: /** @type {function (this:bigwig.DataRecord)} */ (function () {
+      return this.value(bigwig.DataRecord.Aggregate['SUMSQ'])
+    })
+  },
 
-  'end': { get: /** @type {function (this:bigwig.DataRecord)} */ (function() { throw new bigwig.BigwigException('Abstract method not implemented'); })}
+  'norm': {
+    get: /** @type {function (this:bigwig.DataRecord)} */ (function () {
+      return this.value(bigwig.DataRecord.Aggregate['NORM'])
+    })
+  },
+
+  'cnt': {
+    get: /** @type {function (this:bigwig.DataRecord)} */ (function () {
+      return this.value(bigwig.DataRecord.Aggregate['CNT'])
+    })
+  }
 });
 
 /**
