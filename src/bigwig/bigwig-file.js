@@ -128,12 +128,12 @@ bigwig.BigwigFile.prototype.query = function(range, zoom) {
     ((zoom['maxItems'] && zoom['maxItems'] > 0) || (zoom['maxBases'] && zoom['maxBases'] > 0))) {
     if (!zoom['maxBases']) { zoom['maxBases'] = zoom['maxItems']; }
     if (!zoom['maxItems']) { zoom['maxItems'] = zoom['maxBases']; }
-    var basesPerItem = this._zoomHeaders.map(function(z) { return z.reductionLevel; });
+    var basesPerItem = u.fast.map(this._zoomHeaders, function(z) { return z.reductionLevel; });
     var i = -1;
 
     // If there is no specified range, then we look at the entire genome
     var rangeWidth = range ? range['end'] - range['start'] :
-      this._chrTree.leaves.map(/** @param {bigwig.ChrTree.Node} leaf */ function(leaf) { return leaf['chrSize']; })
+      u.fast.map(this._chrTree.leaves, function(leaf) { return leaf['chrSize']; })
         .reduce(function(s1, s2) { return s1 + s2; });
     if (rangeWidth > zoom['maxBases']) { ++i; }
     if (i == 0) {
@@ -163,7 +163,7 @@ bigwig.BigwigFile.prototype.query = function(range, zoom) {
    */
   var nodes = indexTree.query(range);
   var remaining = 0;
-  nodes.forEach(function(node) {
+  u.fast.forEach(nodes, function(node) {
     if (!node.isLeaf) {
       ++remaining;
       self._reader.readIndexBlock(self._header, /** @type {{chr: number, start: number, end: number}} */ (range), /** @type {goog.math.Long} */ (node.dataOffset))
@@ -180,7 +180,11 @@ bigwig.BigwigFile.prototype.query = function(range, zoom) {
   if (remaining) { return promise; }
 
   remaining = 0;
-  nodes.forEach(function(node) {
+  u.fast.forEach(nodes,
+    /**
+     * @param {bigwig.IndexTree.Node} node
+     */
+    function(node) {
     if (!node.dataRecords) {
       ++remaining;
 
@@ -191,7 +195,7 @@ bigwig.BigwigFile.prototype.query = function(range, zoom) {
            * @param {{records: Array.<bigwig.models.ZoomRecord>}} d
            */
           function (d) {
-            node.dataRecords = d.records.map(function(r) { return new bigwig.DataRecordZoom(node, r, self._chrTree); });
+            node.dataRecords = u.fast.map(d.records, function(r) { return new bigwig.DataRecordZoom(node, /** @type {bigwig.models.ZoomRecord} */ (r), self._chrTree); });
 
             --remaining;
             if (!remaining) {
@@ -205,7 +209,7 @@ bigwig.BigwigFile.prototype.query = function(range, zoom) {
            * @param {{sectionHeader: bigwig.models.SectionHeader, records: Array.<bigwig.models.Record>}} d
            */
           function (d) {
-            node.dataRecords = d.records.map(function(r, i) {
+            node.dataRecords = u.fast.map(d.records, function(r, i) {
               return new bigwig.DataRecordImpl(node, d.sectionHeader, r, i, self._chrTree);
             });
 
@@ -220,11 +224,10 @@ bigwig.BigwigFile.prototype.query = function(range, zoom) {
 
   if (remaining) { return promise; }
 
-  var ret = nodes
-    .map(function(node) {
+  var ret = u.fast.concat(u.fast.map(nodes,
+    function(node) {
       return !range ? node.dataRecords :
-        node.dataRecords.filter(/** @param {bigwig.DataRecord} r */ function(r) { return r['chr'] == range['chr'] && r['start'] < range['end'] && r['end'] > range['start']; })})
-    .reduce(function(a1, a2) { return a1.concat(a2); });
+        u.fast.filter(node.dataRecords, /** @param {bigwig.DataRecord} r */ function(r) { return r['chr'] == range['chr'] && r['start'] < range['end'] && r['end'] > range['start']; })}));
 
   resolve(ret);
 

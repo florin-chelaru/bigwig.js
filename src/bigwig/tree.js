@@ -40,7 +40,7 @@ bigwig.Tree.prototype.dfs = function(iterate) {
     // Break if iterate returns true
     if (iterate.call(null, node)) { return; }
     if (node.children && node.children.length) {
-      node.children.forEach(dfs);
+      u.fast.forEach(node.children, dfs);
     }
   };
 

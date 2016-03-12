@@ -393,7 +393,7 @@ bigwig.BigwigReader.prototype.readChrTree = function(header) {
          */
         var extractChildren = function(data) {
           var children = [];
-          data.items.forEach(function(item) {
+          u.fast.forEach(data.items, function(item) {
             var child = new bigwig.ChrTree.Node({ key: item.key });
             if (data.node.isLeaf) {
               child['chrId'] = item.chrId;
@@ -645,7 +645,7 @@ bigwig.BigwigReader.prototype.readIndexBlock = function(header, range, offset) {
       function(d) {
         if (d.node.isLeaf) {
           var leaves = [];
-          d.items.forEach(function(it) {
+          u.fast.forEach(d.items, function(it) {
             var node = new bigwig.IndexTree.Node({
               isLeaf: true,
               startChrId: it.startChromIx,
