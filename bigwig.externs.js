@@ -1,75 +1,14 @@
 /**
  * Created by Florin Chelaru ( florin [dot] chelaru [at] gmail [dot] com )
- * Date: 3/11/2016
- * Time: 6:09 PM
+ * Date: 11/9/2015
+ * Time: 9:49 AM
  */
+
+// Generated with http://www.dotnetwise.com/Code/Externs/
+// Load: https://rawgit.com/florin-chelaru/utils.js/master/utils.min.js
+// Load: https://rawgit.com/florin-chelaru/bigwig.js/master/bigwig.min.js
 
 var bigwig = {};
-
-/**
- * @param {string} uri
- * @param {string} [fwdUri]
- * @param {number} [cacheBlockSize] Default is 512KB
- * @constructor
- */
-bigwig.BigwigFile = function(uri, fwdUri, cacheBlockSize) {};
-
-/**
- * @param {{chr: (string|number), start: number, end: number}} [range]
- * @param {{level: (number|undefined), maxItems: (number|undefined), maxBases: (number|undefined)}} [zoom]
- * @returns {Promise} Promise.<Array.<bigwig.DataRecord>>}
- */
-bigwig.BigwigFile.prototype.query = function(range, zoom) {};
-
-/**
- * @type {Promise}
- * @name bigwig.BigwigFile#initialized
- */
-bigwig.BigwigFile.prototype.initialized;
-
-/**
- * @type {{basesCovered: string, min: number, max: number, sumData: number, sumSquares: number}}
- * @name bigwig.BigwigFile#summary
- */
-bigwig.BigwigFile.prototype.summary;
-
-/**
- * @type {Array.<bigwig.ChrTree.Node>}
- * @name bigwig.BigwigFile#chromosomes
- */
-bigwig.BigwigFile.prototype.chromosomes;
-
-/**
- * @type {number}
- * @name bigwig.BigwigFile#zoomLevels
- */
-bigwig.BigwigFile.prototype.zoomLevels;
-
-/**
- * @param {bigwig.ChrTree.Node} root
- * @constructor
- * @extends {bigwig.Tree}
- */
-bigwig.ChrTree = function(root) {};
-
-/**
- * @param {{key: (string|undefined), chrId: (number|undefined), chrSize: (number|undefined), children: (Array.<bigwig.ChrTree.Node>|undefined)}} node
- * @constructor
- * @extends {bigwig.Tree.Node}
- */
-bigwig.ChrTree.Node = function(node) {};
-
-/**
- * @param {number|string} chrIdOrKey
- * @returns {bigwig.ChrTree.Node}
- */
-bigwig.ChrTree.prototype.getLeaf = function (chrIdOrKey) {};
-
-/**
- * @type {Array.<bigwig.ChrTree.Node>}
- * @name bigwig.ChrTree#leaves
- */
-bigwig.ChrTree.prototype.leaves;
 
 /**
  * @constructor
@@ -170,34 +109,87 @@ bigwig.DataRecord.prototype.toString = function() {};
  */
 bigwig.DataRecord.prototype.toJSON = function() {};
 
+
 /**
- * @param {bigwig.IndexTree.Node} node
- * @param {bigwig.models.SectionHeader} sectionHeader
- * @param {bigwig.models.Record} rawRecord
- * @param {number} index The index of the item in the node items
- * @param {bigwig.ChrTree} [chrTree]
+ * @param {bigwig.Tree.Node} [root]
  * @constructor
- * @extends bigwig.DataRecord
  */
-bigwig.DataRecordImpl = function(node, sectionHeader, rawRecord, index, chrTree) {};
+bigwig.Tree = function(root) {};
 
 /**
- * @param {bigwig.DataRecord.Aggregate} [aggregate]
- * @override
- */
-bigwig.DataRecordImpl.prototype.value = function(aggregate) {};
-
-/**
- * @param {bigwig.IndexTree.Node} node
- * @param {bigwig.models.ZoomRecord} zoomRecord
- * @param {bigwig.ChrTree} [chrTree]
+ * @param {{children: ?Array.<bigwig.Tree.Node>}} [node]
  * @constructor
- * @extends bigwig.DataRecord
  */
-bigwig.DataRecordZoom = function(node, zoomRecord, chrTree) {};
+bigwig.Tree.Node = function(node) {};
 
 /**
- * @param {bigwig.DataRecord.Aggregate} [aggregate]
- * @override
+ * @type {Array.<bigwig.Tree.Node>}
+ * @name bigwig.Tree.Node#children
  */
-bigwig.DataRecordZoom.prototype.value = function(aggregate) {};
+bigwig.Tree.Node.prototype.children;
+
+/**
+ * Iterates through all nodes of the tree; if iterate retuns true, then the
+ * subtree rooted at the given node will be no longer visited
+ * @param {function(bigwig.Tree.Node)} iterate
+ */
+bigwig.Tree.prototype.dfs = function(iterate) {};
+
+/**
+ * @param {bigwig.ChrTree.Node} root
+ * @constructor
+ * @extends {bigwig.Tree}
+ */
+bigwig.ChrTree = function(root) {};
+
+/**
+ * @param {{key: (string|undefined), chrId: (number|undefined), chrSize: (number|undefined), children: (Array.<bigwig.ChrTree.Node>|undefined)}} node
+ * @constructor
+ * @extends {bigwig.Tree.Node}
+ */
+bigwig.ChrTree.Node = function(node) {};
+
+/**
+ * @param {number|string} chrIdOrKey
+ * @returns {bigwig.ChrTree.Node}
+ */
+bigwig.ChrTree.prototype.getLeaf = function (chrIdOrKey) {};
+
+/**
+ * @type {Array.<bigwig.ChrTree.Node>}
+ * @name bigwig.ChrTree#leaves
+ */
+bigwig.ChrTree.prototype.leaves;
+
+/**
+ * @param {string} uri
+ * @param {string} [fwdUri]
+ * @param {number} [cacheBlockSize] Default is 512KB
+ * @constructor
+ */
+bigwig.BigwigFile = function(uri, fwdUri, cacheBlockSize) {};
+
+/**
+ * @param {{chr: (string|number), start: number, end: number}} [range]
+ * @param {{level: (number|undefined), maxItems: (number|undefined), maxBases: (number|undefined)}} [zoom]
+ * @returns {Promise} Promise.<Array.<bigwig.DataRecord>>}
+ */
+bigwig.BigwigFile.prototype.query = function(range, zoom) {};
+
+/**
+ * @type {Promise}
+ * @name bigwig.BigwigFile#initialized
+ */
+bigwig.BigwigFile.prototype.initialized;
+
+/**
+ * @type {{basesCovered: string, min: number, max: number, sumData: number, sumSquares: number}}
+ * @name bigwig.BigwigFile#summary
+ */
+bigwig.BigwigFile.prototype.summary;
+
+/**
+ * @type {number}
+ * @name bigwig.BigwigFile#zoomLevels
+ */
+bigwig.BigwigFile.prototype.zoomLevels;

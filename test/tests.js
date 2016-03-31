@@ -4,9 +4,14 @@
  * Time: 4:37 PM
  */
 
-//var URI = window.location.href + 'data/wigVarStepExample.bigwig';
-var URI = window.location.href + 'data/E120-H3K9ac.pval.signal.bigwig';
-var FWD_URI = window.location.href + 'partial.php';
+if (window['BW_DEBUG']) {
+  goog.require('goog.string.format');
+  goog.require('bigwig.BigwigFile');
+}
+
+var URI = 'http://localhost/bigwig/test/data/wigVarStepExample.bigwig';
+//var URI = 'data/E120-H3K9ac.pval.signal.bigwig';
+var FWD_URI = 'http://localhost/bigwig/test/partial.php';
 
 QUnit.test('bigwig.BigwigReader', function(assert) {
   assert.ok(bigwig.BigwigReader);
@@ -21,9 +26,8 @@ QUnit.test('bigwig.BigwigReader.prototype.get', function(assert) {
   var exp = [0x70, 0xd3, 0x1f, 0x01, 0x00, 0x00, 0x00, 0x00];
 
   var r1 = new bigwig.BigwigReader(URI);
-  r1.get(80, 88, function(e) {
+  r1.get(80, 88, function(buf) {
     if (!finished) {
-      var buf = e.target.response;
       var act = Array.prototype.slice.call(new Uint8Array(buf));
       assert.deepEqual(act, exp);
       finished = true;
@@ -45,9 +49,8 @@ QUnit.test('bigwig.BigwigReader.prototype.get [proxy]', function(assert) {
   var exp = [0x70, 0xd3, 0x1f, 0x01, 0x00, 0x00, 0x00, 0x00];
 
   var r1 = new bigwig.BigwigReader(URI, FWD_URI);
-  r1.get(80, 88, function(e) {
+  r1.get(80, 88, function(buf) {
     if (!finished) {
-      var buf = e.target.response;
       var act = Array.prototype.slice.call(new Uint8Array(buf));
       assert.deepEqual(act, exp);
       finished = true;
@@ -205,7 +208,8 @@ QUnit.test('bigwig.BigwigFile.prototype.query', function(assert) {
   var finished = false;
 
   var f = new bigwig.BigwigFile(URI);
-  f.query('chr1', 0, 100000)
+  f.query({'chr':'chr21', 'start':9400000, 'end':10000000}, {maxItems: 5000})
+  // f.query(undefined, {maxItems: 50000})
     .then(function(d) {
       if (!finished) {
         assert.ok(d);
